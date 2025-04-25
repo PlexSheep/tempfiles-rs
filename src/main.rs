@@ -6,18 +6,19 @@ use actix_web::{App, HttpServer, web};
 use env_logger::Env;
 use log::trace;
 
+mod api_v1;
 mod config;
 mod errors;
 mod files;
 mod state;
 mod views;
 
-use config::actix_config_global;
-use errors::Error;
-use state::AppState;
-use views::*;
-
+use self::api_v1::*;
+use self::config::actix_config_global;
+use self::errors::Error;
+use self::state::AppState;
 use self::state::load_config;
+use self::views::view_get_index;
 
 #[actix_web::main]
 async fn main() -> Result<(), Error> {
@@ -34,9 +35,12 @@ async fn main() -> Result<(), Error> {
             .app_data(app_state.clone())
             .wrap(Logger::default())
             .service(view_get_index)
-            .service(view_get_file_fid_name)
-            .service(view_get_file_fid)
-            .service(view_post_file)
+            .service(
+                web::scope("/api/v1")
+                    .service(api_view_get_file_fid_name)
+                    .service(api_view_get_file_fid)
+                    .service(api_view_post_file),
+            )
             .default_service(web::to(actix_web::HttpResponse::NotFound))
     })
     .keep_alive(KeepAlive::Os) // TODO: check how long this is on debian

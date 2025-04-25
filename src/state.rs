@@ -108,18 +108,40 @@ impl AppState {
         path.exists()
     }
 
-    pub async fn upload_dir_for_fid(&self, fid: FileID) -> Result<PathBuf, Error> {
+    pub fn upload_dir_for_fid(&self, fid: FileID, create: bool) -> Result<PathBuf, Error> {
         let mut p = self.storage_dir();
         p.push(fid.to_string());
-        if let Err(e) = std::fs::create_dir(&p) {
-            if !matches!(e.kind(), std::io::ErrorKind::AlreadyExists) {
-                return Err(e.into());
+        if create {
+            if let Err(e) = std::fs::create_dir(&p) {
+                if !matches!(e.kind(), std::io::ErrorKind::AlreadyExists) {
+                    return Err(e.into());
+                }
             }
         }
         Ok(p)
     }
 
-    pub fn url_for_fid(&self, fid: FileID) -> Uri {
+    pub fn upload_datafile_for_fid(
+        &self,
+        fid: FileID,
+        name: &str,
+        create_dirs: bool,
+    ) -> Result<PathBuf, Error> {
+        let mut p = self.storage_dir();
+        p.push(fid.to_string());
+        p.push("data");
+        if create_dirs {
+            if let Err(e) = std::fs::create_dir_all(&p) {
+                if !matches!(e.kind(), std::io::ErrorKind::AlreadyExists) {
+                    return Err(e.into());
+                }
+            }
+        }
+        p.push(name);
+        Ok(p)
+    }
+
+    pub fn uri_for_fid(&self, fid: FileID) -> Uri {
         let u = self.base_uri();
         let mut parts = u.into_parts();
         parts.path_and_query = Some(
@@ -131,7 +153,7 @@ impl AppState {
         Uri::from_parts(parts).expect("could not combine uri parts for url")
     }
 
-    pub fn url_for_fid_with_name(&self, fid: FileID, name: &str) -> Uri {
+    pub fn uri_for_fid_with_name(&self, fid: FileID, name: &str) -> Uri {
         let u = self.base_uri();
         let mut parts = u.into_parts();
         parts.path_and_query = Some(

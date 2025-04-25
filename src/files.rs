@@ -1,7 +1,9 @@
 use std::fmt::Display;
+use std::path::Path;
 use std::str::FromStr;
 
 use actix_multipart::form::{MultipartForm, tempfile::TempFile, text::Text as MpText};
+use actix_web::http::Uri;
 use actix_web::http::header::ContentType;
 use rand::distr::StandardUniform;
 use rand::prelude::*;
@@ -16,15 +18,34 @@ pub struct FileUpload {
     pub file: TempFile,
 }
 
+#[derive(Debug, Serialize)]
+pub struct FileInfos {
+    pub fid: FileID,
+    pub name: String,
+    pub uri: String,
+}
+
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(transparent)]
 pub struct SerializeableContentType {
     inner: String,
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
 pub struct FileID {
     inner: u64,
+}
+
+impl FileInfos {
+    pub fn build(fid: FileID, name: &str, uri: Uri, path: &Path) -> Result<Self, Error> {
+        let infos = Self {
+            fid,
+            name: name.to_string(),
+            uri: uri.to_string(),
+        };
+
+        Ok(infos)
+    }
 }
 
 impl Display for FileID {
