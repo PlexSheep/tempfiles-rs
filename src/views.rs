@@ -85,12 +85,16 @@ pub async fn view_get_file_fid(
 
 #[get("/file/{fid}/{filename}")]
 pub async fn view_get_file_fid_name(
-    _state: web::Data<AppState>,
-    _path: web::Path<(String, String)>,
+    req: actix_web::HttpRequest,
+    state: web::Data<AppState>,
+    urlpath: web::Path<(String, String)>,
 ) -> Result<impl Responder, Error> {
-    Ok(HttpResponse::Ok().body("TODO"))
-}
-
-pub fn view_default() -> impl Responder {
-    HttpResponse::NotFound().body("this page does not exist")
+    let urlargs = urlpath.into_inner();
+    let fid = FileID::from_str(&urlargs.0)?;
+    let name = urlargs.1;
+    let mut path = state.storage_dir();
+    path.push(fid.to_string());
+    path.push(name);
+    let file = actix_files::NamedFile::open_async(&path).await?;
+    Ok(file.into_response(&req))
 }
