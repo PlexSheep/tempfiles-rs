@@ -3,7 +3,8 @@ use std::path::PathBuf;
 use std::str::FromStr;
 use std::sync::Arc;
 
-use log::debug;
+use log::{debug, info};
+use migration::{MigratorTrait, SchemaManager};
 use rand::{Rng, SeedableRng};
 use sea_orm::{Database, DatabaseConnection};
 use tokio::sync::Mutex;
@@ -41,11 +42,20 @@ impl AppState {
             config,
             csprng: Mutex::new(csprng),
         };
+        a.run_migrations_if_needed().await?;
         a.validate().await?;
         Ok(a)
     }
 
+    async fn run_migrations_if_needed(&self) -> Result<(), Error> {
+        migration::Migrator::status(&self.db).await?;
+        info!("running all pending migrations on database...");
+        migration::Migrator::up(&self.db, None).await?;
+        Ok(())
+    }
+
     async fn validate(&self) -> Result<(), Error> {
+        info!("validating file storage...");
         if !self.storage_dir().exists() {
             std::fs::create_dir_all(self.storage_dir())?;
         }
@@ -53,9 +63,13 @@ impl AppState {
             return Err(Error::StorageDirNotADir);
         }
 
-        self.db().ping().await?;
-
         self.validate_make_testfile()?;
+
+        info!("validating the database...");
+        self.db().ping().await?;
+        self.validate_db_tables_exist().await?;
+
+        info!("finished validations");
 
         Ok(())
     }
@@ -97,16 +111,14 @@ impl AppState {
 
 impl AppState {
     fn validate_make_testfile(&self) -> Result<(), Error> {
+        debug!("validate_make_testfile");
         const TESTDATA: &[u8] = &[19, 13, 124, 25, 16, 2, 16, 37, 38, 84, 38, 92, 125, 15];
 
         let mut testfile_path = self.storage_dir();
         testfile_path.push("___testfile");
-        let mut testfile = std::fs::OpenOptions::new()
-            .write(true)
-            .append(false)
-            .open(&testfile_path)?;
+        let mut testfile = std::fs::File::create(&testfile_path)?;
         testfile.write_all(TESTDATA)?;
-        drop(testfile);
+        testfile.sync_all()?;
 
         let content = std::fs::read(&testfile_path)?;
         if TESTDATA != content {
@@ -116,6 +128,17 @@ impl AppState {
         }
 
         std::fs::remove_file(&testfile_path)?;
+        Ok(())
+    }
+
+    async fn validate_db_tables_exist(&self) -> Result<(), Error> {
+        debug!("validate_db_tables_exist");
+        let schema_manager = SchemaManager::new(self.db());
+
+        if !schema_manager.has_table("user").await? {
+            panic!("validate_db_tables_exist: table 'user' is missing")
+        }
+
         Ok(())
     }
 }

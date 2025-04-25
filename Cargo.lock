@@ -3406,6 +3406,7 @@ dependencies = [
  "rand 0.9.1",
  "rustls 0.23.26",
  "sea-orm",
+ "sea-orm-migration",
  "serde",
  "thiserror",
  "tokio",
