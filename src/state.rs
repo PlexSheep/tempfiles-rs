@@ -16,15 +16,18 @@ use crate::files::FileID;
 const MAX_FID_RETRIES: u32 = 20;
 
 #[derive(Debug)]
-pub struct AppState {
+pub struct AppState<'stuff> {
     db: DatabaseConnection, // NOTE: closed on drop
     config: Config,
     csprng: Mutex<rand::rngs::StdRng>,
+    templates: minijinja::Environment<'stuff>,
 }
 
-impl AppState {
+impl<'stuff> AppState<'stuff> {
     pub async fn new(config: &Config) -> Result<Self, Error> {
         let csprng = rand::rngs::StdRng::from_os_rng();
+
+        let templates = prepare_templates()?;
 
         let db_path = std::path::PathBuf::from(&config.service.db_sqlite);
         if let Some(parent) = db_path.parent() {
@@ -38,6 +41,7 @@ impl AppState {
             db,
             config: config.clone(),
             csprng: Mutex::new(csprng),
+            templates,
         };
         a.run_migrations_if_needed().await?;
         a.validate().await?;
@@ -171,7 +175,7 @@ impl AppState {
     }
 }
 
-impl AppState {
+impl<'stuff> AppState<'stuff> {
     fn validate_make_testfile(&self) -> Result<(), Error> {
         debug!("validate_make_testfile");
         const TESTDATA: &[u8] = &[19, 13, 124, 25, 16, 2, 16, 37, 38, 84, 38, 92, 125, 15];
@@ -214,4 +218,12 @@ pub fn load_config(config_file_path: impl Into<PathBuf>) -> Result<Config, Error
     let config = Config::load(&config_file_path)?;
 
     Ok(config)
+}
+
+fn prepare_templates<'stuff>() -> Result<minijinja::Environment<'stuff>, Error> {
+    use minijinja::Environment;
+    let mut env = Environment::new();
+    env.add_template("_test", "Hello {{ name }}!").unwrap();
+
+    Ok(env)
 }

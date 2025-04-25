@@ -12,7 +12,7 @@ use crate::state::AppState;
 
 #[post("/file")]
 pub async fn api_view_post_file(
-    state: web::Data<AppState>,
+    state: web::Data<AppState<'_>>,
     MultipartForm(file_upload): MultipartForm<FileUpload>,
 ) -> Result<impl Responder, Error> {
     info!("File upload requested");
@@ -42,7 +42,7 @@ pub async fn api_view_post_file(
 
 #[get("/file/{fid}")]
 pub async fn api_view_get_file_fid(
-    state: web::Data<AppState>,
+    state: web::Data<AppState<'_>>,
     path: web::Path<String>,
 ) -> Result<impl Responder, Error> {
     let fid: crate::files::FileID = FileID::from_str(&path.into_inner())?;
@@ -83,7 +83,7 @@ pub async fn api_view_get_file_fid(
 #[get("/file/{fid}/{filename}")]
 pub async fn api_view_get_file_fid_name(
     req: actix_web::HttpRequest,
-    state: web::Data<AppState>,
+    state: web::Data<AppState<'_>>,
     urlpath: web::Path<(String, String)>,
 ) -> Result<impl Responder, Error> {
     let urlargs = urlpath.into_inner();
@@ -97,7 +97,7 @@ pub async fn api_view_get_file_fid_name(
 #[get("/file/{fid}/{filename}/info")]
 pub async fn api_view_get_file_fid_name_info(
     req: actix_web::HttpRequest,
-    state: web::Data<AppState>,
+    state: web::Data<AppState<'_>>,
     urlpath: web::Path<(String, String)>,
 ) -> Result<impl Responder, Error> {
     let urlargs = urlpath.into_inner();
