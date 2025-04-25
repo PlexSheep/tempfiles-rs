@@ -8,12 +8,12 @@ default_expiration_days = 60              # files are deleted after 60 days
 delete_old_files = true                   # will delete old files if the used storage would be over max_storage
 
 [accounts]
-allow_anon = true             # allow anonymous uploads
-allow_registration = false    # allow account registration without invite
-expiration_userdefined = true # users may overwrite the expiration
+allow_anon = true          # allow anonymous uploads
+allow_registration = false # allow account registration without invite
 
 
 [service]
 secret = "7UznN0NBPegSCetoXvETJJvW9Ewk8iGw9D2ortfy"
 rate_limit_window_ms = 300000                       # 5 min
 rate_limit_max_uploads = 20                         # 20 uploads per window max
+db_sqlite = "/tmp/tempfiles-rs/db.sqlite"           # path to the database
