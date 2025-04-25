@@ -1,10 +1,12 @@
 use std::io::Read;
+use std::path::PathBuf;
 
 use actix_multipart::form::MultipartForm;
 use actix_web::dev::AppService;
 use actix_web::{App, HttpResponse, HttpServer, Responder, get, post, web};
-use log::{debug, info, trace};
+use log::{debug, info, trace, warn};
 
+use crate::errors::Error;
 use crate::files::FileUpload;
 use crate::state::AppState;
 
@@ -17,14 +19,23 @@ pub async fn view_index() -> impl Responder {
 pub async fn view_post_file(
     state: web::Data<AppState>,
     MultipartForm(mut file_upload): MultipartForm<FileUpload>,
-) -> impl Responder {
+) -> Result<impl Responder, Error> {
     info!("File upload requested");
-    debug!("file upload: {file_upload:?}");
-    let mut content = String::new();
-    file_upload.file.file.read_to_string(&mut content).unwrap();
+    debug!("file upload data: {file_upload:?}");
 
-    todo!();
-    HttpResponse::Ok().body("TODO")
+    let mut new_path = state.storage_dir();
+    new_path.push(state.new_fid().await.to_string());
+    std::fs::create_dir(&new_path)?;
+    new_path.push(file_upload.name.to_string());
+    std::fs::rename(file_upload.file.file.path(), &new_path).inspect_err(|e| {
+        warn!("Error while uploading file: {e}");
+        debug!(
+            "Path of temporary upload was: {}",
+            file_upload.file.file.path().display()
+        )
+    })?;
+
+    Ok(HttpResponse::Ok().body(format!("uploaded to {}", new_path.display())))
 }
 
 #[get("/file/{fid}")]

@@ -105,7 +105,10 @@ impl AppState {
     }
 
     pub async fn has_fid(&self, fid: FileID) -> bool {
-        todo!()
+        let mut path = self.storage_dir();
+        path.push(fid.to_string());
+
+        path.exists()
     }
 }
 
