@@ -1,13 +1,16 @@
 use std::fmt::Display;
+use std::os::unix::fs::MetadataExt;
 use std::path::Path;
 use std::str::FromStr;
+use std::time::SystemTime;
 
 use actix_multipart::form::{MultipartForm, tempfile::TempFile, text::Text as MpText};
 use actix_web::http::Uri;
 use actix_web::http::header::ContentType;
+use chrono::Utc;
 use rand::distr::StandardUniform;
 use rand::prelude::*;
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize, Serializer};
 
 use crate::errors::Error;
 
@@ -23,6 +26,13 @@ pub struct FileInfos {
     pub fid: FileID,
     pub name: String,
     pub uri: String,
+    pub size: u64,
+    #[serde(serialize_with = "ser_systime")]
+    pub time_created: SystemTime,
+    #[serde(serialize_with = "ser_systime")]
+    pub time_modified: SystemTime,
+    #[serde(serialize_with = "ser_systime")]
+    pub time_accessed: SystemTime,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -32,16 +42,23 @@ pub struct SerializeableContentType {
 }
 
 #[derive(Debug, Copy, Clone, Serialize, Deserialize)]
+#[serde(transparent)]
 pub struct FileID {
     inner: u64,
 }
 
 impl FileInfos {
     pub fn build(fid: FileID, name: &str, uri: Uri, path: &Path) -> Result<Self, Error> {
+        let fsmeta = std::fs::metadata(path)?;
+
         let infos = Self {
             fid,
             name: name.to_string(),
             uri: uri.to_string(),
+            size: fsmeta.size(),
+            time_created: fsmeta.created()?,
+            time_modified: fsmeta.modified()?,
+            time_accessed: fsmeta.accessed()?,
         };
 
         Ok(infos)
@@ -96,6 +113,11 @@ impl Display for SerializeableContentType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.inner)
     }
+}
+
+fn ser_systime<S: Serializer>(time: &SystemTime, s: S) -> Result<S::Ok, S::Error> {
+    let datetime: chrono::DateTime<Utc> = chrono::DateTime::from(*time);
+    format!("{datetime}").serialize(s)
 }
 
 #[cfg(test)]

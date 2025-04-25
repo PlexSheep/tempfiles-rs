@@ -38,6 +38,7 @@ async fn main() -> Result<(), Error> {
             .service(
                 web::scope("/api/v1")
                     .service(api_view_get_file_fid_name)
+                    .service(api_view_get_file_fid_name_info)
                     .service(api_view_get_file_fid)
                     .service(api_view_post_file),
             )
