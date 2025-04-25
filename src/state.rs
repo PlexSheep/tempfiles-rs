@@ -23,7 +23,7 @@ pub struct AppState<'templates> {
     templating: minijinja::Environment<'templates>,
 }
 
-impl<'templates> AppState<'templates> {
+impl AppState<'_> {
     pub async fn new(config: &Config) -> Result<Self, Error> {
         let csprng = rand::rngs::StdRng::from_os_rng();
 
@@ -183,7 +183,7 @@ impl<'templates> AppState<'templates> {
     }
 }
 
-impl<'templates> AppState<'templates> {
+impl AppState<'_> {
     fn validate_make_testfile(&self) -> Result<(), Error> {
         debug!("validate_make_testfile");
         const TESTDATA: &[u8] = &[19, 13, 124, 25, 16, 2, 16, 37, 38, 84, 38, 92, 125, 15];
