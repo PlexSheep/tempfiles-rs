@@ -1,4 +1,5 @@
-use std::path::{Path, PathBuf};
+use std::net::SocketAddr;
+use std::path::Path;
 
 use actix_web::web;
 use serde::Deserialize;
@@ -35,6 +36,8 @@ pub struct ServiceConfig {
     pub rate_limit_window_ms: u64,
     pub rate_limit_max_uploads: u64,
     pub db_sqlite: String,
+    pub bind: SocketAddr,
+    pub base_url: String,
 }
 
 impl Config {
@@ -50,6 +53,6 @@ impl Config {
     }
 }
 
-pub fn actix_config_global(cfg: &mut web::ServiceConfig) {
+pub fn actix_config_global(_cfg: &mut web::ServiceConfig) {
     // todo!()
 }

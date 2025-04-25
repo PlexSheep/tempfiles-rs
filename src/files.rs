@@ -7,6 +7,8 @@ use rand::distr::StandardUniform;
 use rand::prelude::*;
 use serde::{Deserialize, Serialize};
 
+use crate::errors::Error;
+
 #[derive(Debug, MultipartForm)]
 pub struct FileUpload {
     pub name: MpText<String>,
@@ -27,7 +29,7 @@ pub struct FileID {
 
 impl Display for FileID {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:20}", self.inner)
+        write!(f, "{:020}", self.inner)
     }
 }
 
@@ -36,6 +38,14 @@ impl Distribution<FileID> for StandardUniform {
         FileID {
             inner: rng.random(),
         }
+    }
+}
+
+impl FromStr for FileID {
+    type Err = Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(FileID { inner: s.parse()? })
     }
 }
 
@@ -64,5 +74,19 @@ impl From<SerializeableContentType> for ContentType {
 impl Display for SerializeableContentType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.inner)
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::FileID;
+
+    #[test]
+    fn test_fid() {
+        let mut fid: FileID;
+        for _ in 0..1000 {
+            fid = rand::random();
+            assert!(!fid.to_string().contains(" "))
+        }
     }
 }

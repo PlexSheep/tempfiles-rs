@@ -17,11 +17,15 @@ use errors::Error;
 use state::AppState;
 use views::*;
 
+use self::state::load_config;
+
 #[actix_web::main]
 async fn main() -> Result<(), Error> {
     setup_logging(None);
 
-    let inner_state = AppState::new("./conf/config.toml").await?;
+    let config = load_config("./conf/config.toml")?;
+
+    let inner_state = AppState::new(&config).await?;
     let app_state = web::Data::new(inner_state);
 
     HttpServer::new(move || {
@@ -29,11 +33,14 @@ async fn main() -> Result<(), Error> {
             .configure(actix_config_global)
             .app_data(app_state.clone())
             .wrap(Logger::default())
-            .service(view_index)
+            .service(view_get_index)
+            .service(view_get_file_fid_name)
+            .service(view_get_file_fid)
             .service(view_post_file)
+            .default_service(web::to(actix_web::HttpResponse::NotFound))
     })
     .keep_alive(KeepAlive::Os) // TODO: check how long this is on debian
-    .bind(("127.0.0.1", 8080))? // TODO: use rustls
+    .bind(&config.service.bind)? // TODO: use rustls
     .shutdown_timeout(15)
     .run()
     .await?;

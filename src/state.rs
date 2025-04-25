@@ -1,8 +1,8 @@
 use std::io::Write;
 use std::path::PathBuf;
 use std::str::FromStr;
-use std::sync::Arc;
 
+use actix_web::http::Uri;
 use log::{debug, info};
 use migration::{MigratorTrait, SchemaManager};
 use rand::{Rng, SeedableRng};
@@ -23,10 +23,7 @@ pub struct AppState {
 }
 
 impl AppState {
-    pub async fn new(config_file_path: impl Into<PathBuf>) -> Result<Self, Error> {
-        let config_file_path: PathBuf = config_file_path.into();
-        let config = Config::load(&config_file_path)?;
-
+    pub async fn new(config: &Config) -> Result<Self, Error> {
         let csprng = rand::rngs::StdRng::from_os_rng();
 
         let db_path = std::path::PathBuf::from(&config.service.db_sqlite);
@@ -39,7 +36,7 @@ impl AppState {
 
         let a = AppState {
             db,
-            config,
+            config: config.clone(),
             csprng: Mutex::new(csprng),
         };
         a.run_migrations_if_needed().await?;
@@ -93,7 +90,7 @@ impl AppState {
 
     pub async fn new_fid(&self) -> FileID {
         let mut fid: FileID;
-        for _ in (0..MAX_FID_RETRIES) {
+        for _ in 0..MAX_FID_RETRIES {
             fid = self.csprng().await.random();
             if !self.has_fid(fid).await {
                 return fid;
@@ -109,6 +106,46 @@ impl AppState {
         path.push(fid.to_string());
 
         path.exists()
+    }
+
+    pub async fn upload_dir_for_fid(&self, fid: FileID) -> Result<PathBuf, Error> {
+        let mut p = self.storage_dir();
+        p.push(fid.to_string());
+        if let Err(e) = std::fs::create_dir(&p) {
+            if !matches!(e.kind(), std::io::ErrorKind::AlreadyExists) {
+                return Err(e.into());
+            }
+        }
+        Ok(p)
+    }
+
+    pub fn url_for_fid(&self, fid: FileID) -> Uri {
+        let u = self.base_uri();
+        let mut parts = u.into_parts();
+        parts.path_and_query = Some(
+            format!("/file/{}", fid)
+                .parse()
+                .expect("could not format url for fid"),
+        );
+
+        Uri::from_parts(parts).expect("could not combine uri parts for url")
+    }
+
+    pub fn url_for_fid_with_name(&self, fid: FileID, name: &str) -> Uri {
+        let u = self.base_uri();
+        let mut parts = u.into_parts();
+        parts.path_and_query = Some(
+            format!("/file/{}/{name}", fid)
+                .parse()
+                .expect("could not format url for fid"),
+        );
+
+        Uri::from_parts(parts).expect("could not combine uri parts for url")
+    }
+
+    pub fn base_uri(&self) -> Uri {
+        Uri::from_str(&self.config.service.base_url)
+            .expect("base_url of config was not a proper url")
     }
 }
 
@@ -144,4 +181,15 @@ impl AppState {
 
         Ok(())
     }
+
+    fn validate_config_base_url(&self) -> Result<(), Error> {
+        todo!()
+    }
+}
+
+pub fn load_config(config_file_path: impl Into<PathBuf>) -> Result<Config, Error> {
+    let config_file_path: PathBuf = config_file_path.into();
+    let config = Config::load(&config_file_path)?;
+
+    Ok(config)
 }
