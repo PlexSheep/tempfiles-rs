@@ -38,6 +38,7 @@ pub struct ServiceConfig {
     pub db_sqlite: String,
     pub bind: SocketAddr,
     pub base_url: String,
+    pub data_dir: std::path::PathBuf,
 }
 
 impl Config {

@@ -96,7 +96,6 @@ pub async fn api_view_get_file_fid_name(
 
 #[get("/file/{fid}/{filename}/info")]
 pub async fn api_view_get_file_fid_name_info(
-    req: actix_web::HttpRequest,
     state: web::Data<AppState<'_>>,
     urlpath: web::Path<(String, String)>,
 ) -> Result<impl Responder, Error> {

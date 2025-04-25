@@ -31,6 +31,8 @@ pub enum Error {
     FileNotFound,
     #[error("Could not parse FileID: {0}")]
     BadFileID(#[from] ParseIntError),
+    #[error("Template Error: {0}")]
+    Template(#[from] minijinja::Error),
 }
 
 impl actix_web::error::ResponseError for Error {

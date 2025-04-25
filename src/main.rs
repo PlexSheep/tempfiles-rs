@@ -24,7 +24,7 @@ use self::views::view_get_index;
 async fn main() -> Result<(), Error> {
     setup_logging(None);
 
-    let config = load_config("./conf/config.toml")?;
+    let config = load_config("./data/config.toml")?;
 
     let inner_state = AppState::new(&config).await?;
     let app_state = web::Data::new(inner_state);

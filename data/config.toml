@@ -19,3 +19,4 @@ rate_limit_max_uploads = 20                         # 20 uploads per window max
 db_sqlite = "/tmp/tempfiles-rs/db.sqlite"           # path to the database
 bind = "0.0.0.0:8000"
 base_url = "http://localhost:8000"
+data_dir = "./data" # internal data like templates
