@@ -3,6 +3,7 @@ use std::path::PathBuf;
 use std::str::FromStr;
 use std::sync::Arc;
 
+use log::debug;
 use rand::{Rng, SeedableRng};
 use sea_orm::{Database, DatabaseConnection};
 use tokio::sync::Mutex;
@@ -32,6 +33,7 @@ impl AppState {
             std::fs::create_dir_all(parent)?
         }
         let db_url = format!("sqlite:{}?mode=rwc", config.service.db_sqlite);
+        debug!("DB url: {db_url}");
         let db = Database::connect(db_url).await?;
 
         let a = AppState {
