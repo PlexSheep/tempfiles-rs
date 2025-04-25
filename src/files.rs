@@ -20,7 +20,7 @@ pub struct SerializeableContentType {
     inner: String,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct FileID {
     inner: u64,
 }

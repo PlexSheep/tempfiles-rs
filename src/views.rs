@@ -22,15 +22,19 @@ pub async fn view_post_file(
     debug!("file upload: {file_upload:?}");
     let mut content = String::new();
     file_upload.file.file.read_to_string(&mut content).unwrap();
-    HttpResponse::Ok().body(content)
+
+    todo!();
+    HttpResponse::Ok().body("TODO")
 }
 
 #[get("/file/{fid}")]
 pub async fn view_get_file_fid(data: web::Data<AppState>, req_body: String) -> impl Responder {
-    HttpResponse::Ok().body(req_body)
+    todo!();
+    HttpResponse::Ok().body("TODO")
 }
 
 #[get("/file/{fid}/{filename}")]
 pub async fn view_get_file_fid_name(data: web::Data<AppState>, req_body: String) -> impl Responder {
-    HttpResponse::Ok().body(req_body)
+    todo!();
+    HttpResponse::Ok().body("TODO")
 }

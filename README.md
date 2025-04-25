@@ -11,3 +11,9 @@ Easy file hosting service
 * [GitHub](https://github.com/PlexSheep/tempfiles-rs)
 * [crates.io](https://crates.io/crates/tempfiles-rs)
 * [docs.rs](https://docs.rs/crate/tempfiles-rs/)
+
+## Uploading
+
+```bash
+curl -v -X POST http://localhost:8080/file -F "name=passwd" -F "file=@/etc/passwd"
+```

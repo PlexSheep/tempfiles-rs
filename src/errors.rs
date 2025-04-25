@@ -4,7 +4,7 @@ use thiserror::Error;
 pub enum ConfigError {
     #[error("The config file was not found")]
     FileNotFound,
-    #[error("The config file is not a file but something else")]
+    #[error("The path of the config file is not a file")]
     NotAFile,
     #[error("Could not read the config file: {0}")]
     CouldNotReadFile(#[from] std::io::Error),
@@ -20,4 +20,6 @@ pub enum Error {
     IO(#[from] std::io::Error),
     #[error("DB Error: {0}")]
     Db(#[from] sea_orm::DbErr),
+    #[error("The path of the storage directory is not a directory")]
+    StorageDirNotADir,
 }
