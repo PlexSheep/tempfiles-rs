@@ -1,8 +1,10 @@
 use std::path::PathBuf;
 
+use actix_web::dev::ServiceRequest;
 use actix_web::http::KeepAlive;
 use actix_web::middleware::Logger;
-use actix_web::{App, HttpServer, web};
+use actix_web::web::PayloadConfig;
+use actix_web::{App, HttpResponse, HttpServer, web};
 use env_logger::Env;
 use log::trace;
 
@@ -18,7 +20,7 @@ use self::config::actix_config_global;
 use self::errors::Error;
 use self::state::AppState;
 use self::state::load_config;
-use self::views::view_get_index;
+use self::views::{view_default, view_get_index};
 
 #[actix_web::main]
 async fn main() -> Result<(), Error> {
@@ -42,7 +44,7 @@ async fn main() -> Result<(), Error> {
                     .service(api_view_get_file_fid)
                     .service(api_view_post_file),
             )
-            .default_service(web::to(actix_web::HttpResponse::NotFound))
+            .default_service(web::route().to(view_default))
     })
     .keep_alive(KeepAlive::Os) // TODO: check how long this is on debian
     .bind(&config.service.bind)? // TODO: use rustls
