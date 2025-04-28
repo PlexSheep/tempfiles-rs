@@ -2,8 +2,7 @@ use std::io::Write;
 use std::path::PathBuf;
 use std::str::FromStr;
 
-use actix_web::http::Uri;
-use log::{debug, error, info};
+use log::{debug, info};
 use migration::{MigratorTrait, SchemaManager};
 use rand::{Rng, SeedableRng};
 use sea_orm::{Database, DatabaseConnection};
@@ -154,13 +153,21 @@ impl AppState<'_> {
     }
 
     pub fn make_file_infos(&self, fid: FileID, name: &str) -> Result<FileInfos, Error> {
+        let path = &self.upload_datafile_for_fid(fid, name, false)?;
+        let flags = magic::cookie::Flags::MIME_TYPE | magic::cookie::Flags::MIME_ENCODING;
+        let cookie = magic::Cookie::open(flags)?;
+        let cookie = cookie
+            .load(&magic::cookie::DatabasePaths::default())
+            .expect("could not load database for libmagic file type detection");
         FileInfos::build(
             fid,
             name,
             self.uri_api_file_fid_name(fid, name),
             self.uri_api_file_fid_name_info(fid, name),
             self.uri_frontend_file_fid(fid),
-            &self.upload_datafile_for_fid(fid, name, false)?,
+            path,
+            mime::Mime::from_str(&cookie.file(path).unwrap_or("unknown".to_string()))
+                .unwrap_or(mime::APPLICATION_OCTET_STREAM),
         )
     }
 }

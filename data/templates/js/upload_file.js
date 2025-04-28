@@ -11,8 +11,10 @@ async function sendData() {
 			// Set the FormData instance as the request body
 			body: formData,
 		});
-		var fid = response["fid"];
-		var raw_uri = response["fid"];
+		response.json().then((response_stuff) => {
+			var url_frontend = response_stuff.url_frontend
+			formOut.innerHTML = `<a href=${url_frontend}>GO TO UPLOAD: ${url_frontend}</a>`
+		})
 	} catch (e) {
 		console.error(e);
 	}

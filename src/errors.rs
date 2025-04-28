@@ -19,7 +19,7 @@ pub enum ConfigError {
 #[derive(Error, Debug)]
 pub enum Error {
     #[error(transparent)]
-    ConfigError(#[from] ConfigError),
+    Config(#[from] ConfigError),
     #[error("IO Error: {0}")]
     IO(#[from] std::io::Error),
     #[error("DB Error: {0}")]
@@ -36,6 +36,10 @@ pub enum Error {
     Template(#[from] minijinja::Error),
     #[error("Could not parse variable from url encoding: {0}")]
     UrlEncoding(#[from] FromUtf8Error),
+    #[error("Error while detecting the content type of some file: {0}")]
+    ContentTypeDetection(#[from] magic::cookie::Error),
+    #[error("Internal Error while detecting the content type of some file: {0}")]
+    ContentTypeDetectionInternal(#[from] magic::cookie::OpenError),
 }
 
 impl actix_web::error::ResponseError for Error {

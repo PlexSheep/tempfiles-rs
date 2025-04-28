@@ -28,6 +28,9 @@ pub struct FileInfos {
     pub url_infos: String,
     pub url_frontend: String,
     pub size: u64,
+    /// human readable size
+    pub size_human: String,
+    pub content_type: String,
     #[serde(serialize_with = "ser_systime")]
     pub time_created: SystemTime,
     #[serde(serialize_with = "ser_systime")]
@@ -56,6 +59,7 @@ impl FileInfos {
         uri_infos: Uri,
         uri_frontend: Uri,
         path: &Path,
+        content_type: mime::Mime,
     ) -> Result<Self, Error> {
         let fsmeta = std::fs::metadata(path)?;
 
@@ -69,6 +73,8 @@ impl FileInfos {
             time_created: fsmeta.created()?,
             time_modified: fsmeta.modified()?,
             time_accessed: fsmeta.accessed()?,
+            content_type: content_type.to_string(),
+            size_human: human_bytes::human_bytes(fsmeta.size() as u32),
         };
 
         Ok(infos)

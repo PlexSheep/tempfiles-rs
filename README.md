@@ -17,3 +17,9 @@ Easy file hosting service
 ```bash
 curl -v -X POST http://localhost:8080/file -F "name=passwd" -F "file=@/etc/passwd"
 ```
+
+## System deps
+
+```bash
+apt-get install libmagic-dev
+```
