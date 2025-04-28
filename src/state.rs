@@ -169,7 +169,7 @@ impl AppState<'_> {
         let u = self.base_uri();
         let mut parts = u.into_parts();
         debug!("building uri with fid: {fid}");
-        let mut prepared_url = format!(
+        let prepared_url = format!(
             "/api/v1/file/{}/{}",
             urlencoding::encode(fid.to_string().as_str()),
             urlencoding::encode(name)
