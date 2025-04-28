@@ -24,7 +24,9 @@ pub struct FileUpload {
 pub struct FileInfos {
     pub fid: FileID,
     pub name: String,
-    pub uri: String,
+    pub url_raw: String,
+    pub url_infos: String,
+    pub url_frontend: String,
     pub size: u64,
     #[serde(serialize_with = "ser_systime")]
     pub time_created: SystemTime,
@@ -47,13 +49,22 @@ pub struct FileID {
 }
 
 impl FileInfos {
-    pub fn build(fid: FileID, name: &str, uri: Uri, path: &Path) -> Result<Self, Error> {
+    pub fn build(
+        fid: FileID,
+        name: &str,
+        uri_raw: Uri,
+        uri_infos: Uri,
+        uri_frontend: Uri,
+        path: &Path,
+    ) -> Result<Self, Error> {
         let fsmeta = std::fs::metadata(path)?;
 
         let infos = Self {
             fid,
             name: name.to_string(),
-            uri: uri.to_string(),
+            url_raw: uri_raw.to_string(),
+            url_infos: uri_infos.to_string(),
+            url_frontend: uri_frontend.to_string(),
             size: fsmeta.size(),
             time_created: fsmeta.created()?,
             time_modified: fsmeta.modified()?,

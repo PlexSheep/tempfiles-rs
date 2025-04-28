@@ -1,9 +1,15 @@
 {% extends "base.html" %}
 {% block main %}
 <h1>tempfiles-rs</h1>
-<form method="POST" action="/api/v1/file" enctype="multipart/form-data">
+<form enctype="multipart/form-data"
+	id="upload-form">
 	<input type="file" name="file">
 	<input type="submit">
 </form>
+<div id="formout">
+</div>
+<script>
+{% include "js/upload_file.js" %}
+</script>
 {{ test }}
 {% endblock %}

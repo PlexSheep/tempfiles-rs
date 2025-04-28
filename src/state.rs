@@ -11,16 +11,16 @@ use tokio::sync::Mutex;
 
 use crate::config::Config;
 use crate::errors::Error;
-use crate::files::FileID;
+use crate::files::{FileID, FileInfos};
 
 const MAX_FID_RETRIES: u32 = 20;
 
 #[derive(Debug)]
 pub struct AppState<'templates> {
-    db: DatabaseConnection, // NOTE: closed on drop
-    config: Config,
-    csprng: Mutex<rand::rngs::StdRng>,
-    templating: minijinja::Environment<'templates>,
+    pub(crate) db: DatabaseConnection, // NOTE: closed on drop
+    pub(crate) config: Config,
+    pub(crate) csprng: Mutex<rand::rngs::StdRng>,
+    pub(crate) templating: minijinja::Environment<'templates>,
 }
 
 impl AppState<'_> {
@@ -153,78 +153,56 @@ impl AppState<'_> {
         Ok(p)
     }
 
-    pub fn uri_for_fid(&self, fid: FileID) -> Uri {
-        let u = self.base_uri();
-        let mut parts = u.into_parts();
-        parts.path_and_query = Some(
-            format!("/api/v1/file/{}", fid)
-                .parse()
-                .expect("could not format url for fid"),
-        );
-
-        Uri::from_parts(parts).expect("could not combine uri parts for url")
-    }
-
-    pub fn uri_for_fid_with_name(&self, fid: FileID, name: &str) -> Uri {
-        let u = self.base_uri();
-        let mut parts = u.into_parts();
-        debug!("building uri with fid: {fid}");
-        let prepared_url = format!(
-            "/api/v1/file/{}/{}",
-            urlencoding::encode(fid.to_string().as_str()),
-            urlencoding::encode(name)
-        );
-        parts.path_and_query = Some(
-            prepared_url
-                .parse()
-                .inspect_err(|e| error!("Made a faulty URI somehow: {}", prepared_url))
-                .expect("could not format url for fid"),
-        );
-
-        Uri::from_parts(parts).expect("could not combine uri parts for url")
-    }
-
-    pub fn base_uri(&self) -> Uri {
-        Uri::from_str(&self.config.service.base_url)
-            .expect("base_url of config was not a proper url")
+    pub fn make_file_infos(&self, fid: FileID, name: &str) -> Result<FileInfos, Error> {
+        FileInfos::build(
+            fid,
+            name,
+            self.uri_api_file_fid_name(fid, name),
+            self.uri_api_file_fid_name_info(fid, name),
+            self.uri_frontend_file_fid(fid),
+            &self.upload_datafile_for_fid(fid, name, false)?,
+        )
     }
 }
 
-impl AppState<'_> {
-    fn validate_make_testfile(&self) -> Result<(), Error> {
-        debug!("validate_make_testfile");
-        const TESTDATA: &[u8] = &[19, 13, 124, 25, 16, 2, 16, 37, 38, 84, 38, 92, 125, 15];
+pub(crate) mod validators {
+    use super::*;
+    impl AppState<'_> {
+        pub(crate) fn validate_make_testfile(&self) -> Result<(), Error> {
+            debug!("validate_make_testfile");
+            const TESTDATA: &[u8] = &[19, 13, 124, 25, 16, 2, 16, 37, 38, 84, 38, 92, 125, 15];
 
-        let mut testfile_path = self.storage_dir();
-        testfile_path.push("___testfile");
-        let mut testfile = std::fs::File::create(&testfile_path)?;
-        testfile.write_all(TESTDATA)?;
-        testfile.sync_all()?;
+            let mut testfile_path = self.storage_dir();
+            testfile_path.push("___testfile");
+            let mut testfile = std::fs::File::create(&testfile_path)?;
+            testfile.write_all(TESTDATA)?;
+            testfile.sync_all()?;
 
-        let content = std::fs::read(&testfile_path)?;
-        if TESTDATA != content {
-            panic!(
-                "validate_make_testfile: content written to the testfile does not match the constant TESTDATA"
-            )
+            let content = std::fs::read(&testfile_path)?;
+            if TESTDATA != content {
+                panic!(
+                    "validate_make_testfile: content written to the testfile does not match the constant TESTDATA"
+                )
+            }
+
+            std::fs::remove_file(&testfile_path)?;
+            Ok(())
         }
 
-        std::fs::remove_file(&testfile_path)?;
-        Ok(())
-    }
+        pub(crate) async fn validate_db_tables_exist(&self) -> Result<(), Error> {
+            debug!("validate_db_tables_exist");
+            let schema_manager = SchemaManager::new(self.db());
 
-    async fn validate_db_tables_exist(&self) -> Result<(), Error> {
-        debug!("validate_db_tables_exist");
-        let schema_manager = SchemaManager::new(self.db());
+            if !schema_manager.has_table("user").await? {
+                panic!("validate_db_tables_exist: table 'user' is missing")
+            }
 
-        if !schema_manager.has_table("user").await? {
-            panic!("validate_db_tables_exist: table 'user' is missing")
+            Ok(())
         }
 
-        Ok(())
-    }
-
-    fn validate_config_base_url(&self) -> Result<(), Error> {
-        todo!()
+        pub(crate) fn validate_config_base_url(&self) -> Result<(), Error> {
+            todo!()
+        }
     }
 }
 

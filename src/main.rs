@@ -13,6 +13,7 @@ mod config;
 mod errors;
 mod files;
 mod state;
+mod urls;
 mod views;
 
 use self::api_v1::*;
