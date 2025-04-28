@@ -1,4 +1,3 @@
-use actix_web::dev::{ServiceRequest, ServiceResponse};
 use actix_web::{HttpResponse, Responder, get, web};
 use minijinja::context;
 
