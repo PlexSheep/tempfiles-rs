@@ -1,10 +1,9 @@
-use std::path::PathBuf;
 use std::str::FromStr;
 
 use actix_multipart::form::MultipartForm;
 use actix_web::web::Redirect;
 use actix_web::{HttpResponse, Responder, get, post, web};
-use log::{debug, error, info, warn};
+use log::{debug, info, warn};
 
 use crate::errors::Error;
 use crate::files::{FileID, FileUpload};
