@@ -19,7 +19,13 @@ pub async fn api_view_post_file(
     debug!("file upload data: {file_upload:?}");
 
     let fid = state.new_fid().await;
-    let name = file_upload.name.to_string().trim().to_string();
+    let name = file_upload
+        .file
+        .file_name
+        .expect("why does it not have a file name???") // TODO: this will crash when no filename exists
+        .to_string()
+        .trim()
+        .to_string();
     let new_path = state.upload_datafile_for_fid(fid, &name, true)?;
 
     debug!(

@@ -4,7 +4,7 @@ use std::path::Path;
 use std::str::FromStr;
 use std::time::SystemTime;
 
-use actix_multipart::form::{MultipartForm, tempfile::TempFile, text::Text as MpText};
+use actix_multipart::form::{MultipartForm, tempfile::TempFile};
 use actix_web::http::Uri;
 use actix_web::http::header::ContentType;
 use chrono::Utc;
@@ -16,7 +16,6 @@ use crate::errors::Error;
 
 #[derive(Debug, MultipartForm)]
 pub struct FileUpload {
-    pub name: MpText<String>,
     #[multipart(limit = "1GB")]
     pub file: TempFile,
 }
