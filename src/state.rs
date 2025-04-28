@@ -3,7 +3,7 @@ use std::path::PathBuf;
 use std::str::FromStr;
 
 use actix_web::http::Uri;
-use log::{debug, info};
+use log::{debug, error, info};
 use migration::{MigratorTrait, SchemaManager};
 use rand::{Rng, SeedableRng};
 use sea_orm::{Database, DatabaseConnection};
@@ -157,7 +157,7 @@ impl AppState<'_> {
         let u = self.base_uri();
         let mut parts = u.into_parts();
         parts.path_and_query = Some(
-            format!("/file/{}", fid)
+            format!("/api/v1/file/{}", fid)
                 .parse()
                 .expect("could not format url for fid"),
         );
@@ -168,9 +168,16 @@ impl AppState<'_> {
     pub fn uri_for_fid_with_name(&self, fid: FileID, name: &str) -> Uri {
         let u = self.base_uri();
         let mut parts = u.into_parts();
+        debug!("building uri with fid: {fid}");
+        let mut prepared_url = format!(
+            "/api/v1/file/{}/{}",
+            urlencoding::encode(fid.to_string().as_str()),
+            urlencoding::encode(name)
+        );
         parts.path_and_query = Some(
-            format!("/file/{}/{name}", fid)
+            prepared_url
                 .parse()
+                .inspect_err(|e| error!("Made a faulty URI somehow: {}", prepared_url))
                 .expect("could not format url for fid"),
         );
 

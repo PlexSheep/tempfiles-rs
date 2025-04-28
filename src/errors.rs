@@ -1,6 +1,7 @@
 use actix_web::http::header::HeaderValue;
 use log::{error, warn};
 use std::num::ParseIntError;
+use std::string::FromUtf8Error;
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -33,6 +34,8 @@ pub enum Error {
     BadFileID(#[from] ParseIntError),
     #[error("Template Error: {0}")]
     Template(#[from] minijinja::Error),
+    #[error("Could not parse variable from url encoding: {0}")]
+    UrlEncoding(#[from] FromUtf8Error),
 }
 
 impl actix_web::error::ResponseError for Error {

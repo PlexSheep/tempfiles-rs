@@ -15,7 +15,7 @@ pub async fn api_view_post_file(
     state: web::Data<AppState<'_>>,
     MultipartForm(file_upload): MultipartForm<FileUpload>,
 ) -> Result<impl Responder, Error> {
-    info!("File upload requested");
+    info!("Uploading File");
     debug!("file upload data: {file_upload:?}");
 
     let fid = state.new_fid().await;
@@ -45,6 +45,7 @@ pub async fn api_view_get_file_fid(
     state: web::Data<AppState<'_>>,
     path: web::Path<String>,
 ) -> Result<impl Responder, Error> {
+    info!("Redirecting to file for fid");
     let fid: crate::files::FileID = FileID::from_str(&path.into_inner())?;
     let mut path: PathBuf = state.upload_dir_for_fid(fid, false)?;
     path.push("data");
@@ -86,10 +87,12 @@ pub async fn api_view_get_file_fid_name(
     state: web::Data<AppState<'_>>,
     urlpath: web::Path<(String, String)>,
 ) -> Result<impl Responder, Error> {
+    info!("Downloading file for fid");
     let urlargs = urlpath.into_inner();
     let fid = FileID::from_str(&urlargs.0)?;
-    let name = urlargs.1;
+    let name = urlencoding::decode(urlargs.1.as_str())?;
     let path = state.upload_datafile_for_fid(fid, &name, false)?;
+    debug!("Get file: {}", path.display());
     let file = actix_files::NamedFile::open_async(&path).await?;
     Ok(file.into_response(&req))
 }
@@ -99,6 +102,7 @@ pub async fn api_view_get_file_fid_name_info(
     state: web::Data<AppState<'_>>,
     urlpath: web::Path<(String, String)>,
 ) -> Result<impl Responder, Error> {
+    info!("Get information on file for fid");
     let urlargs = urlpath.into_inner();
     let fid = FileID::from_str(&urlargs.0)?;
     let name = urlargs.1;

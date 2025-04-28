@@ -67,7 +67,7 @@ impl FileInfos {
 
 impl Display for FileID {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:020}", self.inner)
+        write!(f, "{}", self.inner)
     }
 }
 
