@@ -44,6 +44,10 @@ impl AppState<'_> {
         self.uri_any(&uri_any!("/file/{}", fid))
     }
 
+    pub fn uri_frontend_file_fid_name(&self, fid: FileID, name: &str) -> Uri {
+        self.uri_any(&uri_any!("/file/{}/{}", fid, name))
+    }
+
     pub fn uri_frontend_index(&self) -> Uri {
         self.uri_any(&uri_any!("/"))
     }

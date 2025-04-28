@@ -1,7 +1,6 @@
 {% extends "base.html" %}
 {% block main %}
-<h1>tempfiles-rs</h1>
-<table style="color: #ffffff; font-size: 12px;">
+<table class="table">
 	<tbody>
 		<tr>
 			<th style="width: 80px;">Filename</th>
@@ -13,18 +12,22 @@
 		</tr>
 		<tr>
 			<th>URL</th>
-			<td><a target="_blank" href="{{ finfo.url_raw }}">{{ url_raw }}</a>
+			<td><a target="_blank" href="{{ finfo.url_raw }}">{{ finfo.url_raw }}</a>
 			</td>
 		</tr>
 		<tr>
-			<th>Expires at</th>
-			<td>2025-04-29 01:19 UTC</td>
+			<th>Expires</th>
+			<td>{{ finfo.expires }}</td>
+		</tr>
+		<tr>
+			<th>Uploaded</th>
+			<td>{{ finfo.time_created }}</td>
 		</tr>
 	</tbody>
 </table>
-{% if finfo.content_type == "image" %}
+{% if is_image %}
 <img id="preview" src="{{ finfo.url_raw }}">
 {% else %}
 <p>unknown content type, no preview</p>
-{{ test }}
+{% endif %}
 {% endblock %}

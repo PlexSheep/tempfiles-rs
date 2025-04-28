@@ -33,6 +33,8 @@ pub struct FileInfos {
     pub content_type: String,
     #[serde(serialize_with = "ser_systime")]
     pub time_created: SystemTime,
+
+    // TODO: perhaps better not to show these for privacy
     #[serde(serialize_with = "ser_systime")]
     pub time_modified: SystemTime,
     #[serde(serialize_with = "ser_systime")]
@@ -78,6 +80,10 @@ impl FileInfos {
         };
 
         Ok(infos)
+    }
+
+    pub fn content_type(&self) -> Result<mime::Mime, Error> {
+        Ok(mime::Mime::from_str(&self.content_type)?)
     }
 }
 

@@ -40,6 +40,8 @@ pub enum Error {
     ContentTypeDetection(#[from] magic::cookie::Error),
     #[error("Internal Error while detecting the content type of some file: {0}")]
     ContentTypeDetectionInternal(#[from] magic::cookie::OpenError),
+    #[error("Could not parse content type: {0}")]
+    ParseContentType(#[from] mime::FromStrError),
 }
 
 impl actix_web::error::ResponseError for Error {

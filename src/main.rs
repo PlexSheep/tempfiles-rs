@@ -19,7 +19,10 @@ use self::config::actix_config_global;
 use self::errors::Error;
 use self::state::AppState;
 use self::state::load_config;
-use self::views::{view_default, view_get_index};
+use self::views::{
+    frontend_view_get_file_fid, frontend_view_get_file_fid_name, frontend_view_get_index,
+    view_default,
+};
 
 #[actix_web::main]
 async fn main() -> Result<(), Error> {
@@ -35,7 +38,9 @@ async fn main() -> Result<(), Error> {
             .configure(actix_config_global)
             .app_data(app_state.clone())
             .wrap(Logger::default())
-            .service(view_get_index)
+            .service(frontend_view_get_index)
+            .service(frontend_view_get_file_fid)
+            .service(frontend_view_get_file_fid_name)
             .service(
                 web::scope("/api/v1")
                     .service(api_view_get_file_fid_name)

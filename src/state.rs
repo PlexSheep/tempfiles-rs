@@ -2,7 +2,7 @@ use std::io::Write;
 use std::path::PathBuf;
 use std::str::FromStr;
 
-use log::{debug, info};
+use log::{debug, error, info};
 use migration::{MigratorTrait, SchemaManager};
 use rand::{Rng, SeedableRng};
 use sea_orm::{Database, DatabaseConnection};
@@ -164,11 +164,42 @@ impl AppState<'_> {
             name,
             self.uri_api_file_fid_name(fid, name),
             self.uri_api_file_fid_name_info(fid, name),
-            self.uri_frontend_file_fid(fid),
+            self.uri_frontend_file_fid_name(fid, name),
             path,
             mime::Mime::from_str(&cookie.file(path).unwrap_or("unknown".to_string()))
                 .unwrap_or(mime::APPLICATION_OCTET_STREAM),
         )
+    }
+
+    pub fn get_filename_for_fid(&self, fid: FileID) -> Result<String, Error> {
+        let mut path: PathBuf = self.upload_dir_for_fid(fid, false)?;
+        path.push("data");
+        debug!("fid path: {}", path.display());
+        if !path.exists() {
+            debug!("does not exist");
+            return Err(Error::FileNotFound);
+        }
+
+        let count_items = path.read_dir().into_iter().count();
+        if count_items != 1 {
+            error!("items in the directory: {count_items:?}");
+            return Err(Error::NotOneFileInStorageDir(count_items));
+        }
+        let mut dir_ents: std::fs::ReadDir = path.read_dir()?;
+
+        let item: Result<_, std::io::Error> = dir_ents
+            .next()
+            .expect("No dirent despite count_items being 1");
+        if let Err(e) = item {
+            return Err(e.into());
+        }
+        let name = item
+            .as_ref()
+            .unwrap()
+            .file_name()
+            .to_string_lossy()
+            .to_string();
+        Ok(name)
     }
 }
 

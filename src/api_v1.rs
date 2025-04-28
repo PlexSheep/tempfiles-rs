@@ -46,36 +46,8 @@ pub async fn api_view_get_file_fid(
     state: web::Data<AppState<'_>>,
     path: web::Path<String>,
 ) -> Result<impl Responder, Error> {
-    info!("Redirecting to file for fid");
     let fid: crate::files::FileID = FileID::from_str(&path.into_inner())?;
-    let mut path: PathBuf = state.upload_dir_for_fid(fid, false)?;
-    path.push("data");
-    debug!("fid path: {}", path.display());
-    if !path.exists() {
-        debug!("does not exist");
-        return Err(Error::FileNotFound);
-    }
-
-    let count_items = path.read_dir().into_iter().count();
-    if count_items != 1 {
-        error!("items in the directory: {count_items:?}");
-        return Err(Error::NotOneFileInStorageDir(count_items));
-    }
-    let mut dir_ents: std::fs::ReadDir = path.read_dir()?;
-
-    let item: Result<_, std::io::Error> = dir_ents
-        .next()
-        .expect("No dirent despite count_items being 1");
-    if let Err(e) = item {
-        return Err(e.into());
-    }
-    let name = item
-        .as_ref()
-        .unwrap()
-        .file_name()
-        .to_string_lossy()
-        .to_string();
-    debug!("name of file in fid path: {name}");
+    let name = state.get_filename_for_fid(fid)?;
 
     Ok(Redirect::to(
         state.uri_api_file_fid_name(fid, &name).to_string(),
