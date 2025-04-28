@@ -1,10 +1,8 @@
 use std::path::PathBuf;
 
-use actix_web::dev::ServiceRequest;
 use actix_web::http::KeepAlive;
 use actix_web::middleware::Logger;
-use actix_web::web::PayloadConfig;
-use actix_web::{App, HttpResponse, HttpServer, web};
+use actix_web::{App, HttpServer, web};
 use env_logger::Env;
 use log::trace;
 
