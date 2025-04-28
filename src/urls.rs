@@ -1,7 +1,7 @@
 use std::str::FromStr;
 
 use actix_web::http::Uri;
-use log::{debug, error};
+use log::error;
 
 use crate::files::FileID;
 use crate::state::AppState;

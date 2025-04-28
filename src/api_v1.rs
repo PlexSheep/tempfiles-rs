@@ -7,7 +7,7 @@ use actix_web::{HttpResponse, Responder, get, post, web};
 use log::{debug, error, info, warn};
 
 use crate::errors::Error;
-use crate::files::{FileID, FileInfos, FileUpload};
+use crate::files::{FileID, FileUpload};
 use crate::state::AppState;
 
 #[post("/file")]
