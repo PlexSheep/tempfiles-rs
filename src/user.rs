@@ -13,7 +13,7 @@ impl User {
         todo!()
     }
 
-    pub fn logout(self) -> Result<(),Error> {
+    pub fn logout(self) -> Result<(), Error> {
         todo!()
     }
 }

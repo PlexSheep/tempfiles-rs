@@ -8,13 +8,13 @@ use log::trace;
 
 mod api_v1;
 mod config;
+mod db;
 mod errors;
 mod files;
 mod state;
 mod urls;
-mod views;
-mod db;
 mod user;
+mod views;
 
 use self::api_v1::*;
 use self::config::actix_config_global;

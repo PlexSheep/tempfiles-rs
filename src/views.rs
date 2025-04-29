@@ -7,19 +7,16 @@ use serde::Serialize;
 
 use crate::user;
 
-#[derive(Debug,Serialize)]
+#[derive(Debug, Serialize)]
 pub struct BasicContext {
     user: Option<user::User>,
 }
 
 impl BasicContext {
-    pub async fn build( _state: &web::Data<AppState<'_>>) -> Result<Self, Error> {
-        Ok(BasicContext {
-            user: None
-        })
+    pub async fn build(_state: &web::Data<AppState<'_>>) -> Result<Self, Error> {
+        Ok(BasicContext { user: None })
     }
 }
-
 
 use crate::errors::Error;
 use crate::files::FileID;
@@ -63,8 +60,8 @@ pub async fn frontend_view_get_file_fid_name(
         .templating()
         .get_template("preview.html")?
         .render(context!(
-            bctx => BasicContext::build(&state).await?, 
-            finfo => finfo, 
+            bctx => BasicContext::build(&state).await?,
+            finfo => finfo,
             is_image => ct.type_() == mime::IMAGE
         ))?;
     Ok(HttpResponse::Ok().body(content))
