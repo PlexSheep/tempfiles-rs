@@ -42,6 +42,12 @@ pub enum Error {
     ContentTypeDetectionInternal(#[from] magic::cookie::OpenError),
     #[error("Could not parse content type: {0}")]
     ParseContentType(#[from] mime::FromStrError),
+    #[error("Error while working with password hashes: {0}")]
+    PwHashing(argon2::password_hash::Error),
+    #[error("Wrong login password")]
+    WrongPassword,
+    #[error("The requested user does not exist")]
+    UserDoesNotExist
 }
 
 impl actix_web::error::ResponseError for Error {
