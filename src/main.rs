@@ -22,8 +22,7 @@ use self::errors::Error;
 use self::state::AppState;
 use self::state::load_config;
 use self::views::{
-    frontend_view_get_file_fid, frontend_view_get_file_fid_name, frontend_view_get_index,
-    view_default,
+    frontend_view_get_file_fid, frontend_view_get_file_fid_name, frontend_view_get_index, frontend_view_get_login, frontend_view_get_register, frontend_view_get_settings, view_default
 };
 
 #[actix_web::main]
@@ -43,6 +42,9 @@ async fn main() -> Result<(), Error> {
             .service(frontend_view_get_index)
             .service(frontend_view_get_file_fid)
             .service(frontend_view_get_file_fid_name)
+            .service(frontend_view_get_login)
+            .service(frontend_view_get_register)
+            .service(frontend_view_get_settings)
             .service(
                 web::scope("/api/v1")
                     .service(api_view_get_file_fid_name)

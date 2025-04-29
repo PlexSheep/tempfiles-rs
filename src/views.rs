@@ -75,8 +75,6 @@ pub async fn view_default() -> HttpResponse {
 pub async fn frontend_view_get_login(
     state: web::Data<AppState<'_>>,
 ) -> Result<impl Responder, Error> {
-    todo!("login is still WIP");
-
     let content: String = state
         .templating()
         .get_template("login.html")?
@@ -88,8 +86,6 @@ pub async fn frontend_view_get_login(
 pub async fn frontend_view_get_register(
     state: web::Data<AppState<'_>>,
 ) -> Result<impl Responder, Error> {
-    todo!("register is still WIP");
-
     let content: String = state
         .templating()
         .get_template("login.html")?
@@ -101,8 +97,6 @@ pub async fn frontend_view_get_register(
 pub async fn frontend_view_get_settings(
     state: web::Data<AppState<'_>>,
 ) -> Result<impl Responder, Error> {
-    todo!("settings is still WIP");
-
     let content: String = state
         .templating()
         .get_template("login.html")?

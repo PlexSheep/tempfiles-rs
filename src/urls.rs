@@ -52,6 +52,18 @@ impl AppState<'_> {
         self.uri_any(&uri_any!("/"))
     }
 
+    pub fn uri_frontend_login(&self) -> Uri {
+        self.uri_any(&uri_any!("/login"))
+    }
+
+    pub fn uri_frontend_register(&self) -> Uri {
+        self.uri_any(&uri_any!("/register"))
+    }
+
+    pub fn uri_frontend_settings(&self) -> Uri {
+        self.uri_any(&uri_any!("/settings"))
+    }
+
     fn uri_any(&self, raw_url: &str) -> Uri {
         let u = self.base_uri();
         let mut parts = u.into_parts();

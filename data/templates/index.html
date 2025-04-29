@@ -1,16 +1,43 @@
-{% extends "base.html" %}
-{% block main %}
-<h1 class="display-1">tempfiles-rs</h1>
-<p class="lead">Upload any file and get a public link for sharing it!</p>
-<form enctype="multipart/form-data"
-	id="upload-form">
-	<input type="file" name="file">
-	<input type="submit">
-</form>
-<div id="formout">
+{% extends "base.html" %} {% block main %}
+<div class="container col-xxl-8 px-4 py-5">
+  <div class="row flex-lg-row-reverse align-items-center g-5 py-5">
+    <div class="col-10 col-sm-8 col-lg-6">
+      <img
+        src="https://static.cscherr.de/images/logos/Snowboard/Snowboard.svg"
+        class="d-block mx-lg-auto img-fluid"
+        alt="Bootstrap Themes"
+        width="700"
+        height="500"
+        loading="lazy"
+      />
+    </div>
+    <div class="col-lg-6">
+      <h1 class="display-3 fw-bold text-body-emphasis lh-1 mb-3">
+        tempfiles-rs
+      </h1>
+      <p class="lead">Upload any file and get a public link for sharing it!</p>
+      <div class="d-grid gap-2 d-md-flex justify-content-md-start">
+        <form enctype="multipart/form-data" id="upload-form">
+          <div class="my-3">
+            <label for="fileInput" class="form-label">Upload File</label>
+            <input
+              id="fileInput"
+              type="file"
+              class="form-control"
+              name="file"
+            />
+          </div>
+          <div class="my-3">
+            <input type="submit" class="btn btn-primary" />
+          </div>
+          <div id="formout" class="my-3"></div>
+        </form>
+      </div>
+    </div>
+  </div>
 </div>
+
 <script>
-{% include "js/upload_file.js" %}
+  {% include "js/upload_file.js" %}
 </script>
-{{ test }}
 {% endblock %}
