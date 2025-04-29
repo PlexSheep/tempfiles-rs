@@ -11,8 +11,8 @@ impl MigrationTrait for Migration {
                 Table::create()
                     .table(User::Table)
                     .if_not_exists()
-                    .col(schema::pk_auto(User::Id).not_null())
-                    .col(schema::string(User::Email).not_null())
+                    .col(schema::pk_auto(User::Id).not_null().unique_key())
+                    .col(schema::string(User::Email).not_null().unique_key())
                     .col(schema::string(User::PasswordHash).not_null())
                     .col(schema::date_time(User::CreationTime).not_null())
                     .col(schema::date_time(User::LastActionTime))
@@ -29,7 +29,7 @@ impl MigrationTrait for Migration {
 }
 
 #[derive(DeriveIden)]
-enum User {
+pub enum User {
     Table,
     Id,
     Email,

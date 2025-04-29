@@ -6,8 +6,9 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq, Serialize, Deserialize)]
 #[sea_orm(table_name = "user")]
 pub struct Model {
-    #[sea_orm(primary_key)]
+    #[sea_orm(primary_key, unique)]
     pub id: i32,
+    #[sea_orm(unique)]
     pub email: String,
     pub password_hash: String,
     pub creation_time: DateTime,
