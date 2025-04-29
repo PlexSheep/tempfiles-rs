@@ -22,7 +22,8 @@ use self::errors::Error;
 use self::state::AppState;
 use self::state::load_config;
 use self::views::{
-    frontend_view_get_file_fid, frontend_view_get_file_fid_name, frontend_view_get_index, frontend_view_get_login, frontend_view_get_register, frontend_view_get_settings, view_default
+    frontend_view_get_file_fid, frontend_view_get_file_fid_name, frontend_view_get_index,
+    frontend_view_get_login, frontend_view_get_register, frontend_view_get_settings, view_default,
 };
 
 #[actix_web::main]
