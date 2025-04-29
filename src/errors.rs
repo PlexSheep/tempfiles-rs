@@ -47,7 +47,7 @@ pub enum Error {
     #[error("Wrong login password")]
     WrongPassword,
     #[error("The requested user does not exist")]
-    UserDoesNotExist
+    UserDoesNotExist,
 }
 
 impl actix_web::error::ResponseError for Error {
