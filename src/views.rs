@@ -3,6 +3,23 @@ use std::str::FromStr;
 use actix_web::web::Redirect;
 use actix_web::{HttpResponse, Responder, get, web};
 use minijinja::context;
+use serde::Serialize;
+
+use crate::user;
+
+#[derive(Debug,Serialize)]
+pub struct BasicContext {
+    user: Option<user::User>,
+}
+
+impl BasicContext {
+    pub async fn build( _state: &web::Data<AppState<'_>>) -> Result<Self, Error> {
+        Ok(BasicContext {
+            user: None
+        })
+    }
+}
+
 
 use crate::errors::Error;
 use crate::files::FileID;
@@ -14,7 +31,7 @@ pub async fn frontend_view_get_index(
     let content: String = state
         .templating()
         .get_template("index.html")?
-        .render(context!())?;
+        .render(context!(bctx => BasicContext::build(&state).await?))?;
     Ok(HttpResponse::Ok().body(content))
 }
 
@@ -45,7 +62,11 @@ pub async fn frontend_view_get_file_fid_name(
     let content: String = state
         .templating()
         .get_template("preview.html")?
-        .render(context!(finfo => finfo, is_image => ct.type_() == mime::IMAGE))?;
+        .render(context!(
+            bctx => BasicContext::build(&state).await?, 
+            finfo => finfo, 
+            is_image => ct.type_() == mime::IMAGE
+        ))?;
     Ok(HttpResponse::Ok().body(content))
 }
 
