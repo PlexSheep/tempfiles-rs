@@ -13,6 +13,7 @@ use rand::prelude::*;
 use serde::{Deserialize, Serialize, Serializer};
 
 use crate::errors::Error;
+use crate::user::User;
 
 #[derive(Debug, MultipartForm)]
 pub struct FileUpload {
@@ -33,6 +34,8 @@ pub struct FileInfos {
     pub content_type: String,
     #[serde(serialize_with = "ser_systime")]
     pub time_created: SystemTime,
+    #[serde(serialize_with = "ser_uploader")]
+    pub uploader: Option<User>,
 
     // TODO: perhaps better not to show these for privacy
     #[serde(serialize_with = "ser_systime")]
@@ -62,6 +65,7 @@ impl FileInfos {
         uri_frontend: Uri,
         path: &Path,
         content_type: mime::Mime,
+        uploader: Option<&User>,
     ) -> Result<Self, Error> {
         let fsmeta = std::fs::metadata(path)?;
 
@@ -77,6 +81,7 @@ impl FileInfos {
             time_accessed: fsmeta.accessed()?,
             content_type: content_type.to_string(),
             size_human: human_bytes::human_bytes(fsmeta.size() as u32),
+            uploader: uploader.map(|u| u.to_owned()),
         };
 
         Ok(infos)
@@ -140,6 +145,13 @@ impl Display for SerializeableContentType {
 fn ser_systime<S: Serializer>(time: &SystemTime, s: S) -> Result<S::Ok, S::Error> {
     let datetime: chrono::DateTime<Utc> = chrono::DateTime::from(*time);
     format!("{datetime}").serialize(s)
+}
+
+fn ser_uploader<S: Serializer>(user: &Option<User>, s: S) -> Result<S::Ok, S::Error> {
+    match user {
+        None => "Anonymous".serialize(s),
+        Some(user) => user.username().serialize(s),
+    }
 }
 
 #[cfg(test)]

@@ -16,6 +16,8 @@ impl MigrationTrait for Migration {
                     .col(schema::string(User::PasswordHash).not_null())
                     .col(schema::date_time(User::CreationTime).not_null())
                     .col(schema::date_time(User::LastActionTime))
+                    .col(schema::string(User::UserName).not_null())
+                    .col(schema::string(User::Kind).not_null())
                     .to_owned(),
             )
             .await
@@ -28,6 +30,7 @@ impl MigrationTrait for Migration {
     }
 }
 
+#[allow(unused)]
 #[derive(DeriveIden)]
 pub enum User {
     Table,
@@ -36,4 +39,7 @@ pub enum User {
     PasswordHash,
     CreationTime,
     LastActionTime,
+    #[allow(clippy::enum_variant_names)]
+    UserName,
+    Kind,
 }

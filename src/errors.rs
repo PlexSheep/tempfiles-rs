@@ -48,6 +48,10 @@ pub enum Error {
     WrongPassword,
     #[error("The requested user does not exist")]
     UserDoesNotExist,
+    #[error("Validation of a datastructure failed: {0}")]
+    Validation(#[from] validator::ValidationErrors),
+    #[error("Error while setting Login Parameters: {0}")]
+    LogIn(#[from] actix_identity::error::LoginError),
 }
 
 impl actix_web::error::ResponseError for Error {

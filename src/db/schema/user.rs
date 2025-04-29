@@ -13,6 +13,8 @@ pub struct Model {
     pub password_hash: String,
     pub creation_time: DateTime,
     pub last_action_time: DateTime,
+    pub user_name: String,
+    pub kind: String,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
