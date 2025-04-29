@@ -1,9 +1,9 @@
 use std::path::PathBuf;
 
 use actix_web::http::KeepAlive;
-use actix_web_static_files::ResourceFiles;
 use actix_web::middleware::Logger;
 use actix_web::{App, HttpServer, web};
+use actix_web_static_files::ResourceFiles;
 use env_logger::Env;
 use log::trace;
 
@@ -37,7 +37,6 @@ async fn main() -> Result<(), Error> {
 
     let inner_state = AppState::new(&config).await?;
     let app_state = web::Data::new(inner_state);
-
 
     HttpServer::new(move || {
         let generated_static_files = generate();
