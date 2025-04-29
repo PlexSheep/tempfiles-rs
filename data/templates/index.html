@@ -1,5 +1,5 @@
 {% extends "base.html" %} {% block main %}
-<div class="container col-xxl-8 px-4 py-5">
+<div class="container-xl col-xxl-8 py-5 px-5">
   <div class="row flex-lg-row-reverse align-items-center g-5 py-5">
     <div class="col-10 col-sm-8 col-lg-6">
       <img
@@ -11,21 +11,33 @@
         loading="lazy"
       />
     </div>
-    <div class="col-lg-6">
+    <div class="col-lg-6 text-center">
       <h1 class="display-3 fw-bold text-body-emphasis lh-1 mb-3">
         tempfiles-rs
       </h1>
       <p class="lead">Upload any file and get a public link for sharing it!</p>
       <div class="d-grid gap-2 d-md-flex justify-content-md-start">
         <form enctype="multipart/form-data" id="upload-form">
-          <div class="my-3">
-            <label for="fileInput" class="form-label">Upload File</label>
-            <input
-              id="fileInput"
-              type="file"
-              class="form-control"
-              name="file"
-            />
+          <div
+            class="my-3 b-2 bg-secondary-subtle border text-center container"
+            id="dropContainer"
+          >
+            <div class="row">
+              <div
+                class="d-flex flex-column justify-content-center align-items-center"
+                id="fileUploadInputBox"
+                style="min-width: 30vw; min-height: 20vh"
+              >
+                <label for="fileInput" class="form-label">Upload File</label>
+                <input
+                  id="fileInput"
+                  type="file"
+                  class="form-control"
+                  name="file"
+                />
+                <div id="preview-container"></div>
+              </div>
+            </div>
           </div>
           <div class="my-3">
             <input type="submit" class="btn btn-primary" />

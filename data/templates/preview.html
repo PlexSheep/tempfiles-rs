@@ -1,33 +1,32 @@
-{% extends "base.html" %}
-{% block main %}
+{% extends "base.html" %} {% block main %}
 <table class="table">
-	<tbody>
-		<tr>
-			<th style="width: 80px;">Filename</th>
-			<td>{{ finfo.name}}</td>
-		</tr>
-		<tr>
-			<th>Size</th>
-			<td>{{ finfo.size_human }}</td>
-		</tr>
-		<tr>
-			<th>URL</th>
-			<td><a target="_blank" href="{{ finfo.url_raw }}">{{ finfo.url_raw }}</a>
-			</td>
-		</tr>
-		<tr>
-			<th>Expires</th>
-			<td>{{ finfo.expires }}</td>
-		</tr>
-		<tr>
-			<th>Uploaded</th>
-			<td>{{ finfo.time_created }}</td>
-		</tr>
-	</tbody>
+  <tbody>
+    <tr>
+      <th style="width: 80px">Filename</th>
+      <td>{{ finfo.name}}</td>
+    </tr>
+    <tr>
+      <th>Size</th>
+      <td>{{ finfo.size_human }}</td>
+    </tr>
+    <tr>
+      <th>URL</th>
+      <td>
+        <a target="_blank" href="{{ finfo.url_raw }}">{{ finfo.url_raw }}</a>
+      </td>
+    </tr>
+    <tr>
+      <th>Expires</th>
+      <td>{{ finfo.expires }}</td>
+    </tr>
+    <tr>
+      <th>Uploaded</th>
+      <td>{{ finfo.time_created }}</td>
+    </tr>
+  </tbody>
 </table>
 {% if is_image %}
-<img id="preview" src="{{ finfo.url_raw }}">
+<img id="preview-actual" src="{{ finfo.url_raw }}" />
 {% else %}
 <p>unknown content type, no preview</p>
-{% endif %}
-{% endblock %}
+{% endif %} {% endblock %}
