@@ -7,7 +7,7 @@ use argon2::password_hash::SaltString;
 use minijinja::context;
 use serde::Serialize;
 
-use crate::user::{self, User, UserID, UserLoginData, UserRegisterData};
+use crate::user::{self, User, UserLoginData, UserRegisterData};
 
 #[derive(Debug, Serialize)]
 pub struct BasicContext {
