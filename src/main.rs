@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 
 use actix_web::http::KeepAlive;
+use actix_web_static_files::ResourceFiles;
 use actix_web::middleware::Logger;
 use actix_web::{App, HttpServer, web};
 use env_logger::Env;
@@ -26,6 +27,8 @@ use self::views::{
     frontend_view_get_login, frontend_view_get_register, frontend_view_get_settings, view_default,
 };
 
+include!(concat!(env!("OUT_DIR"), "/generated.rs"));
+
 #[actix_web::main]
 async fn main() -> Result<(), Error> {
     setup_logging(None);
@@ -35,11 +38,15 @@ async fn main() -> Result<(), Error> {
     let inner_state = AppState::new(&config).await?;
     let app_state = web::Data::new(inner_state);
 
+
     HttpServer::new(move || {
+        let generated_static_files = generate();
+
         App::new()
             .configure(actix_config_global)
             .app_data(app_state.clone())
             .wrap(Logger::default())
+            .service(ResourceFiles::new("/static", generated_static_files))
             .service(frontend_view_get_index)
             .service(frontend_view_get_file_fid)
             .service(frontend_view_get_file_fid_name)
