@@ -2037,7 +2037,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "38d1115007560874e373613744c6fba374c17688327a71c1476d1a5954cc857b"
 
 [[package]]
-name = "migration"
+name = "migrations"
 version = "0.1.0"
 dependencies = [
  "async-std",
@@ -3500,7 +3500,7 @@ dependencies = [
  "human_bytes",
  "log",
  "magic",
- "migration",
+ "migrations",
  "mime",
  "minijinja",
  "rand 0.9.1",

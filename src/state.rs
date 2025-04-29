@@ -3,7 +3,7 @@ use std::path::PathBuf;
 use std::str::FromStr;
 
 use log::{debug, error, info};
-use migration::{MigratorTrait, SchemaManager};
+use migrations::{MigratorTrait, SchemaManager};
 use rand::{Rng, SeedableRng};
 use sea_orm::{Database, DatabaseConnection};
 use tokio::sync::Mutex;
@@ -52,9 +52,9 @@ impl AppState<'_> {
     }
 
     async fn run_migrations_if_needed(&self) -> Result<(), Error> {
-        migration::Migrator::status(&self.db).await?;
+        migrations::Migrator::status(&self.db).await?;
         info!("running all pending migrations on database...");
-        migration::Migrator::up(&self.db, None).await?;
+        migrations::Migrator::up(&self.db, None).await?;
         Ok(())
     }
 
