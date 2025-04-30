@@ -20,6 +20,8 @@ jobs:
         uses: actions/checkout@v4
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
+      - name: install deps
+        uses: sudo apt-get install libmagic-dev
       - uses: Swatinem/rust-cache@v2
       - name: Run tests
         run: cargo test --all-features --workspace
@@ -38,6 +40,8 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           components: clippy,rustfmt
+      - name: install deps
+        uses: sudo apt-get install libmagic-dev
       - uses: Swatinem/rust-cache@v2
       - name: Clippy check and fix
         run: cargo clippy --fix --all-features --workspace
@@ -46,7 +50,7 @@ jobs:
       - name: commit back to repository
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          # These defaults somehow do not work for me, so I've set them 
+          # These defaults somehow do not work for me, so I've set them
           # explicitly
           # The big number is the userid of the bot
           commit_user_name: github-actions[bot]
@@ -62,6 +66,8 @@ jobs:
         uses: actions/checkout@v4
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
+      - name: install deps
+        uses: sudo apt-get install libmagic-dev
       - uses: Swatinem/rust-cache@v2
       - name: Check documentation
         env:
