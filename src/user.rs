@@ -2,6 +2,8 @@ use std::fmt::Display;
 
 use argon2::PasswordHash;
 use argon2::PasswordHasher;
+use log::debug;
+use log::error;
 use log::warn;
 use sea_orm::ActiveModelTrait;
 use sea_orm::ColumnTrait;
@@ -132,7 +134,14 @@ impl User {
     fn load_password_hash(stored_hash: &str) -> Result<argon2::password_hash::PasswordHash, Error> {
         match PasswordHash::parse(stored_hash, HASH_ENCODING) {
             Ok(hash) => Ok(hash),
-            Err(e) => Err(Error::PwHashing(e)),
+            Err(e) => {
+                error!("Error while loading the password hash from the database: {e}");
+                #[cfg(debug_assertions)]
+                {
+                    debug!("Hash that could not be loaded: {stored_hash}");
+                }
+                return Err(Error::PwHashing(e));
+            }
         }
     }
 
@@ -143,7 +152,10 @@ impl User {
         let a = Self::argon2();
         let hash = match a.hash_password(cleartext.as_bytes(), salt) {
             Ok(h) => h,
-            Err(e) => return Err(Error::PwHashing(e)),
+            Err(e) => {
+                error!("Error while hashing password: {e}");
+                return Err(Error::PwHashing(e));
+            }
         };
 
         Ok(hash)
