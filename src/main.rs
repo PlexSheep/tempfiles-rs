@@ -67,6 +67,7 @@ async fn main() -> Result<(), Error> {
             .service(frontend_view_get_register)
             .service(frontend_view_post_index)
             .service(frontend_view_post_login)
+            .service(frontend_view_get_logout)
             .service(frontend_view_post_register)
             .service(frontend_view_get_settings)
             .service(

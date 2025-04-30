@@ -124,6 +124,19 @@ pub async fn frontend_view_post_login(
     Ok(Redirect::to(state.uri_frontend_index().to_string()))
 }
 
+#[get("/logout")]
+pub async fn frontend_view_get_logout(
+    state: web::Data<AppState<'_>>,
+    identity: Option<Identity>,
+) -> Result<impl Responder, Error> {
+    if let Some(session_identity) = identity {
+        let user = get_user_from_identity(&session_identity, state.db()).await?;
+        user.logout(state.db()).await?;
+        session_logout(session_identity)?;
+    }
+    Ok(Redirect::to(state.uri_frontend_index().to_string()))
+}
+
 #[get("/register")]
 pub async fn frontend_view_get_register(
     state: web::Data<AppState<'_>>,

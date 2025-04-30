@@ -18,6 +18,7 @@ macro_rules! uri_any {
     };
 }
 
+#[allow(unused)] // it's just urls, keep those
 impl AppState<'_> {
     pub fn uri_api_file_fid(&self, fid: FileID) -> Uri {
         self.uri_any(&uri_any!("/api/v1/file/{}", fid))
@@ -54,6 +55,10 @@ impl AppState<'_> {
 
     pub fn uri_frontend_login(&self) -> Uri {
         self.uri_any(&uri_any!("/login"))
+    }
+
+    pub fn uri_frontend_logout(&self) -> Uri {
+        self.uri_any(&uri_any!("/logout"))
     }
 
     pub fn uri_frontend_register(&self) -> Uri {
