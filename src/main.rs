@@ -28,11 +28,7 @@ use self::config::actix_config_global;
 use self::errors::Error;
 use self::state::AppState;
 use self::state::load_config;
-use self::views::{
-    frontend_view_get_file_fid, frontend_view_get_file_fid_name, frontend_view_get_index,
-    frontend_view_get_login, frontend_view_get_register, frontend_view_get_settings,
-    frontend_view_post_login, frontend_view_post_register, view_default,
-};
+use self::views::*;
 
 include!(concat!(env!("OUT_DIR"), "/generated.rs"));
 
@@ -69,6 +65,7 @@ async fn main() -> Result<(), Error> {
             .service(frontend_view_get_file_fid_name)
             .service(frontend_view_get_login)
             .service(frontend_view_get_register)
+            .service(frontend_view_post_index)
             .service(frontend_view_post_login)
             .service(frontend_view_post_register)
             .service(frontend_view_get_settings)

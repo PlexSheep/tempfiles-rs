@@ -5,8 +5,12 @@ use actix_web::web::Redirect;
 use actix_web::{HttpMessage, HttpRequest, HttpResponse, Responder, get, post, web};
 use argon2::password_hash::SaltString;
 use minijinja::context;
+use sea_orm::DatabaseConnection;
 use serde::Serialize;
 
+use crate::errors::Error;
+use crate::files::FileID;
+use crate::state::AppState;
 use crate::user::{self, User, UserLoginData, UserRegisterData};
 
 #[derive(Debug, Serialize)]
@@ -15,30 +19,47 @@ pub struct BasicContext {
 }
 
 impl BasicContext {
-    pub async fn build(_state: &web::Data<AppState<'_>>) -> Result<Self, Error> {
-        Ok(BasicContext { user: None })
+    pub async fn build(
+        _state: &web::Data<AppState<'_>>,
+        user: Option<user::User>,
+    ) -> Result<Self, Error> {
+        Ok(BasicContext { user })
     }
 }
 
-use crate::errors::Error;
-use crate::files::FileID;
-use crate::state::AppState;
+async fn frontend_view_inner_index(
+    state: web::Data<AppState<'_>>,
+    identity: Option<Identity>,
+) -> Result<impl Responder, Error> {
+    let user = maybe_user(&identity, state.db()).await?;
+
+    let content: String = state
+        .templating()
+        .get_template("index.html")?
+        .render(context!(bctx => BasicContext::build(&state, user).await?))?;
+    Ok(HttpResponse::Ok().body(content))
+}
+
 #[get("/")]
 pub async fn frontend_view_get_index(
     state: web::Data<AppState<'_>>,
     identity: Option<Identity>,
 ) -> Result<impl Responder, Error> {
-    let content: String = state
-        .templating()
-        .get_template("index.html")?
-        .render(context!(bctx => BasicContext::build(&state).await?))?;
-    Ok(HttpResponse::Ok().body(content))
+    frontend_view_inner_index(state, identity).await
+}
+
+#[post("/")]
+pub async fn frontend_view_post_index(
+    state: web::Data<AppState<'_>>,
+    identity: Option<Identity>,
+) -> Result<impl Responder, Error> {
+    frontend_view_inner_index(state, identity).await
 }
 
 #[get("/file/{fid}")]
 pub async fn frontend_view_get_file_fid(
     state: web::Data<AppState<'_>>,
-    identity: Option<Identity>,
+    // identity: Option<Identity>,
     path: web::Path<String>,
 ) -> Result<impl Responder, Error> {
     let fid: crate::files::FileID = FileID::from_str(&path.into_inner())?;
@@ -55,6 +76,8 @@ pub async fn frontend_view_get_file_fid_name(
     identity: Option<Identity>,
     urlpath: web::Path<(String, String)>,
 ) -> Result<impl Responder, Error> {
+    let user = maybe_user(&identity, state.db()).await?;
+
     let urlargs = urlpath.into_inner();
     let fid = FileID::from_str(&urlargs.0)?;
     let name = urlargs.1;
@@ -65,7 +88,7 @@ pub async fn frontend_view_get_file_fid_name(
         .templating()
         .get_template("preview.html")?
         .render(context!(
-            bctx => BasicContext::build(&state).await?,
+            bctx => BasicContext::build(&state, user).await?,
             finfo => finfo,
             is_image => ct.type_() == mime::IMAGE
         ))?;
@@ -81,10 +104,12 @@ pub async fn frontend_view_get_login(
     state: web::Data<AppState<'_>>,
     identity: Option<Identity>,
 ) -> Result<impl Responder, Error> {
+    let user = maybe_user(&identity, state.db()).await?;
+
     let content: String = state
         .templating()
         .get_template("login.html")?
-        .render(context!(bctx => BasicContext::build(&state).await?))?;
+        .render(context!(bctx => BasicContext::build(&state, user).await?))?;
     Ok(HttpResponse::Ok().body(content))
 }
 
@@ -104,10 +129,12 @@ pub async fn frontend_view_get_register(
     state: web::Data<AppState<'_>>,
     identity: Option<Identity>,
 ) -> Result<impl Responder, Error> {
+    let user = maybe_user(&identity, state.db()).await?;
+
     let content: String = state
         .templating()
         .get_template("register.html")?
-        .render(context!(bctx => BasicContext::build(&state).await?))?;
+        .render(context!(bctx => BasicContext::build(&state, user).await?))?;
     Ok(HttpResponse::Ok().body(content))
 }
 
@@ -136,10 +163,12 @@ pub async fn frontend_view_get_settings(
     state: web::Data<AppState<'_>>,
     identity: Identity,
 ) -> Result<impl Responder, Error> {
+    let user = get_user_from_identity(&identity, state.db()).await?;
+
     let content: String = state
         .templating()
         .get_template("login.html")?
-        .render(context!(bctx => BasicContext::build(&state).await?))?;
+        .render(context!(bctx => BasicContext::build(&state, Some(user)).await?))?;
     Ok(HttpResponse::Ok().body(content))
 }
 
@@ -152,4 +181,28 @@ fn session_login(req: &HttpRequest, user: &User) -> Result<(), Error> {
 fn session_logout(session_identity: Identity) -> Result<(), Error> {
     session_identity.logout();
     Ok(())
+}
+
+async fn maybe_user(
+    session_identity: &Option<Identity>,
+    db: &DatabaseConnection,
+) -> Result<Option<User>, Error> {
+    let maybe_user = match session_identity {
+        None => return Ok(None),
+        Some(i) => get_user_from_identity(i, db).await,
+    };
+    match maybe_user {
+        Ok(u) => Ok(Some(u)),
+        Err(e) => match e {
+            Error::UserDoesNotExist => Ok(None),
+            other => Err(other),
+        },
+    }
+}
+
+async fn get_user_from_identity(
+    session_identity: &Identity,
+    db: &DatabaseConnection,
+) -> Result<User, Error> {
+    User::get_by_id(session_identity.id()?.parse()?, db).await
 }

@@ -52,6 +52,8 @@ pub enum Error {
     Validation(#[from] validator::ValidationErrors),
     #[error("Error while setting Login Parameters: {0}")]
     LogIn(#[from] actix_identity::error::LoginError),
+    #[error("Could not get session identity: {0}")]
+    SessionIdentity(#[from] actix_identity::error::GetIdentityError),
 }
 
 impl actix_web::error::ResponseError for Error {

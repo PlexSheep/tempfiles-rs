@@ -21,7 +21,7 @@ use crate::errors::Error;
 
 pub type UserID = i32;
 
-pub const HASH_ENCODING: argon2::password_hash::Encoding = argon2::password_hash::Encoding::Bcrypt;
+pub const HASH_ENCODING: argon2::password_hash::Encoding = argon2::password_hash::Encoding::B64;
 
 #[derive(Debug, Serialize, Clone)]
 pub struct User {
@@ -140,7 +140,7 @@ impl User {
                 {
                     debug!("Hash that could not be loaded: {stored_hash}");
                 }
-                return Err(Error::PwHashing(e));
+                Err(Error::PwHashing(e))
             }
         }
     }

@@ -62,6 +62,8 @@ function handleDrop(e) {
 
   if (files.length) {
     fileInput.files = files;
+
+    makePreview(files[0]);
   }
 }
 
