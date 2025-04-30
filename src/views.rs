@@ -7,7 +7,6 @@ use actix_web::{HttpMessage, HttpRequest, HttpResponse, Responder, get, post, we
 use argon2::password_hash::SaltString;
 use minijinja::context;
 use sea_orm::DatabaseConnection;
-use sea_orm::sqlx::Encode;
 use serde::Serialize;
 
 use crate::errors::Error;

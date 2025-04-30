@@ -21,7 +21,7 @@ jobs:
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
       - name: install deps
-        uses: sudo apt-get install libmagic-dev
+        run: sudo apt-get install libmagic-dev
       - uses: Swatinem/rust-cache@v2
       - name: Run tests
         run: cargo test --all-features --workspace
@@ -41,7 +41,7 @@ jobs:
         with:
           components: clippy,rustfmt
       - name: install deps
-        uses: sudo apt-get install libmagic-dev
+        run: sudo apt-get install libmagic-dev
       - uses: Swatinem/rust-cache@v2
       - name: Clippy check and fix
         run: cargo clippy --fix --all-features --workspace
@@ -67,7 +67,7 @@ jobs:
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
       - name: install deps
-        uses: sudo apt-get install libmagic-dev
+        run: sudo apt-get install libmagic-dev
       - uses: Swatinem/rust-cache@v2
       - name: Check documentation
         env:
