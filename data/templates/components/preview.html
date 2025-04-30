@@ -1,0 +1,24 @@
+<div class="container-fluid vh-100">
+  {% if content_type_general == "image" %}
+  <img id="preview-actual" src="{{ finfo.url_raw }}" />
+  {% elif content_type_general == "text" %}
+  <div class="overflow-scroll">
+    <pre
+      id="preview-actual"
+      class="bg-secondary-subtle border-2 font-monospace p-3 my-3"
+      style="min-width: 100%; max-height: 100vh"
+    >
+ {{ file_content | string }} </pre
+    >
+  </div>
+  {% else %}
+  <object
+    id="preview-actual"
+    type="{{ content_type_full }}"
+    data="{{ finfo.url_raw }}"
+    style="min-width: 100%; height: 100%"
+  >
+    This preview didn't work :(
+  </object>
+  {% endif %}
+</div>

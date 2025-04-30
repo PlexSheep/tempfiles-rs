@@ -8,6 +8,7 @@ use actix_multipart::form::{MultipartForm, tempfile::TempFile};
 use actix_web::http::Uri;
 use actix_web::http::header::ContentType;
 use chrono::Utc;
+use log::debug;
 use rand::distr::StandardUniform;
 use rand::prelude::*;
 use serde::{Deserialize, Serialize, Serializer};
@@ -68,6 +69,8 @@ impl FileInfos {
         uploader: Option<&User>,
     ) -> Result<Self, Error> {
         let fsmeta = std::fs::metadata(path)?;
+
+        debug!("Content Type of {}: {}", path.display(), content_type);
 
         let infos = Self {
             fid,

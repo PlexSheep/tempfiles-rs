@@ -1,3 +1,4 @@
+use std::io::Read;
 use std::str::FromStr;
 
 use actix_identity::Identity;
@@ -6,6 +7,7 @@ use actix_web::{HttpMessage, HttpRequest, HttpResponse, Responder, get, post, we
 use argon2::password_hash::SaltString;
 use minijinja::context;
 use sea_orm::DatabaseConnection;
+use sea_orm::sqlx::Encode;
 use serde::Serialize;
 
 use crate::errors::Error;
@@ -84,13 +86,25 @@ pub async fn frontend_view_get_file_fid_name(
     let finfo = state.make_file_infos(fid, &name)?;
     let ct = finfo.content_type()?;
 
+    const MAX_PREVIEW_LENGTH: usize = 16384;
+    let mut file_content_preview = vec![0; MAX_PREVIEW_LENGTH];
+    let mut file = std::fs::File::open(state.upload_datafile_for_fid(fid, &name, false)?)?;
+    #[allow(clippy::unused_io_amount)] // TODO: maybe need to handle partial reads
+    file.read(&mut file_content_preview)?;
+    let mut text_content: String = String::from_utf8_lossy(&file_content_preview).to_string();
+    if file_content_preview.len() < finfo.size as usize {
+        text_content.push_str("\n===============\n(abbreviated)");
+    }
+
     let content: String = state
         .templating()
         .get_template("preview.html")?
         .render(context!(
             bctx => BasicContext::build(&state, user).await?,
             finfo => finfo,
-            is_image => ct.type_() == mime::IMAGE
+            content_type_general => ct.type_().to_string(),
+            content_type_full => ct.to_string(),
+            file_content => text_content
         ))?;
     Ok(HttpResponse::Ok().body(content))
 }

@@ -1,32 +1,38 @@
 {% extends "base.html" %} {% block main %}
-<table class="table">
-  <tbody>
-    <tr>
-      <th style="width: 80px">Filename</th>
-      <td>{{ finfo.name}}</td>
-    </tr>
-    <tr>
-      <th>Size</th>
-      <td>{{ finfo.size_human }}</td>
-    </tr>
-    <tr>
-      <th>URL</th>
-      <td>
-        <a target="_blank" href="{{ finfo.url_raw }}">{{ finfo.url_raw }}</a>
-      </td>
-    </tr>
-    <tr>
-      <th>Expires</th>
-      <td>{{ finfo.expires }}</td>
-    </tr>
-    <tr>
-      <th>Uploaded</th>
-      <td>{{ finfo.time_created }}</td>
-    </tr>
-  </tbody>
-</table>
-{% if is_image %}
-<img id="preview-actual" src="{{ finfo.url_raw }}" />
-{% else %}
-<p>unknown content type, no preview</p>
-{% endif %} {% endblock %}
+<div class="container-xl col-xxl-8 py-5 px-5">
+  <div class="row flex-lg-row-reverse align-items-center g-5 py-5">
+    <div class="col">
+      <table class="table">
+        <tbody>
+          <tr>
+            <th style="width: 80px">Filename</th>
+            <td>{{ finfo.name}}</td>
+          </tr>
+          <tr>
+            <th>Size</th>
+            <td>{{ finfo.size_human }}</td>
+          </tr>
+          <tr>
+            <th>URL</th>
+            <td>
+              <a target="_blank" href="{{ finfo.url_raw }}"
+                >{{ finfo.url_raw }}</a
+              >
+            </td>
+          </tr>
+          <tr>
+            <th>Expires</th>
+            <td>{{ finfo.expires }}</td>
+          </tr>
+          <tr>
+            <th>Uploaded</th>
+            <td>{{ finfo.time_created }}</td>
+          </tr>
+        </tbody>
+      </table>
+      <h2>Preview</h2>
+      {% include "components/preview.html" %}
+    </div>
+  </div>
+</div>
+{% endblock %}
