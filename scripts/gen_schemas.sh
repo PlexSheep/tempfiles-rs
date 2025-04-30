@@ -6,4 +6,5 @@ cargo run -p migrations -- up -u $DBURL
 sea-orm-cli generate entity -v \
 	--database-url $DBURL \
 	--with-serde both \
+	--serde-skip-hidden-column \
 	-o src/db/schema $@

@@ -36,6 +36,7 @@ pub enum User {
     Table,
     Id,
     Email,
+    #[sea_orm(iden = "_password_hash")]
     PasswordHash,
     CreationTime,
     LastActionTime,

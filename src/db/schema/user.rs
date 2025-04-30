@@ -10,6 +10,8 @@ pub struct Model {
     pub id: i32,
     #[sea_orm(unique)]
     pub email: String,
+    #[sea_orm(column_name = "_password_hash")]
+    #[serde(skip)]
     pub password_hash: String,
     pub creation_time: DateTime,
     pub last_action_time: DateTime,
