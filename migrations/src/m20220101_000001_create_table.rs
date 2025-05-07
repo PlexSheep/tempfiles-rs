@@ -30,7 +30,6 @@ impl MigrationTrait for Migration {
     }
 }
 
-#[allow(unused)]
 #[derive(DeriveIden)]
 pub enum User {
     Table,

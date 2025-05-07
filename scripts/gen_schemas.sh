@@ -2,7 +2,7 @@
 set -e
 DBURL=sqlite:/tmp/tempfiles-rs/db.sqlite?mode=rwc
 
-cargo run -p migrations -- up -u $DBURL
+cargo run -p migrations -- fresh -u $DBURL
 sea-orm-cli generate entity -v \
 	--database-url $DBURL \
 	--with-serde both \
