@@ -2,7 +2,6 @@ use std::io::Write;
 use std::path::PathBuf;
 use std::str::FromStr;
 
-use chrono::{FixedOffset, NaiveDateTime};
 use log::{debug, error, info, warn};
 use migrations::{MigratorTrait, SchemaManager};
 use rand::{Rng, SeedableRng};
