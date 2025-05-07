@@ -58,6 +58,8 @@ pub enum Error {
     FileInfos(#[from] crate::files::FileInfosBuilderError),
     #[error("File exists already in the database")]
     FileExists,
+    #[error("User not authorized for this action")]
+    Unauthorized,
 }
 
 impl actix_web::error::ResponseError for Error {

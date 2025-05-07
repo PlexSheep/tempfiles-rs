@@ -3,24 +3,32 @@ const formOut = document.querySelector("#formout");
 const dropContainer = document.querySelector("#dropContainer");
 const fileInput = document.querySelector("#fileInput");
 const previewContainer = document.getElementById("preview-container");
+const formStatus = document.getElementById("formstatus");
 
 async function sendData() {
   // Associate the FormData object with the form element
   const formData = new FormData(form);
 
+  console.info("Trying the upload");
   try {
     const response = await fetch("/api/v1/file", {
       method: "POST",
       // Set the FormData instance as the request body
       body: formData,
     });
+    if (response.status != 200) {
+      throw Error("Could not upload file");
+    }
     response.json().then((response_stuff) => {
       var url_frontend = response_stuff.url_frontend;
-      formOut.innerHTML = `View Upload: <a href=${url_frontend}>: ${url_frontend}</a>`;
-      window.location.replace(url_frontend);
+      if (url_frontend != null) {
+        formOut.innerHTML = `View Upload: <a href=${url_frontend}>: ${url_frontend}</a>`;
+        window.location.replace(url_frontend);
+      }
     });
   } catch (e) {
     console.error(e);
+    formStatus.innerHTML = "Error while uploading";
   }
 }
 // Take over form submission

@@ -6,11 +6,18 @@ use actix_web::body::BoxBody;
 use actix_web::web::Redirect;
 use actix_web::{HttpResponse, Responder, get, post, web};
 use log::{debug, info, warn};
+use serde::{Serialize, Serializer};
 
 use crate::errors::Error;
 use crate::files::{FileID, FileUpload};
 use crate::state::AppState;
 use crate::user::maybe_user;
+
+#[derive(Debug, Serialize)]
+pub struct ErrorResponse {
+    #[serde(serialize_with = "ser_error")]
+    error: crate::errors::Error,
+}
 
 #[post("/file")]
 pub async fn api_view_post_file(
@@ -95,5 +102,14 @@ pub async fn api_view_get_file_fid_name_info(
 }
 
 pub fn api_view_unauthorized() -> HttpResponse<BoxBody> {
-    HttpResponse::Unauthorized().body("You are not allowed to upload files")
+    HttpResponse::Unauthorized().json(ErrorResponse {
+        error: Error::Unauthorized,
+    })
+}
+
+fn ser_error<S>(err: &crate::Error, s: S) -> Result<S::Ok, S::Error>
+where
+    S: Serializer,
+{
+    err.to_string().serialize(s)
 }
