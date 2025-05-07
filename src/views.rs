@@ -6,13 +6,14 @@ use actix_web::web::Redirect;
 use actix_web::{HttpMessage, HttpRequest, HttpResponse, Responder, get, post, web};
 use argon2::password_hash::SaltString;
 use minijinja::context;
-use sea_orm::DatabaseConnection;
 use serde::Serialize;
 
 use crate::errors::Error;
 use crate::files::FileID;
 use crate::state::AppState;
-use crate::user::{self, User, UserLoginData, UserRegisterData};
+use crate::user::{
+    self, User, UserLoginData, UserRegisterData, get_user_from_identity, maybe_user,
+};
 
 #[derive(Debug, Serialize)]
 pub struct BasicContext {
@@ -207,28 +208,4 @@ fn session_login(req: &HttpRequest, user: &User) -> Result<(), Error> {
 fn session_logout(session_identity: Identity) -> Result<(), Error> {
     session_identity.logout();
     Ok(())
-}
-
-async fn maybe_user(
-    session_identity: &Option<Identity>,
-    db: &DatabaseConnection,
-) -> Result<Option<User>, Error> {
-    let maybe_user = match session_identity {
-        None => return Ok(None),
-        Some(i) => get_user_from_identity(i, db).await,
-    };
-    match maybe_user {
-        Ok(u) => Ok(Some(u)),
-        Err(e) => match e {
-            Error::UserDoesNotExist => Ok(None),
-            other => Err(other),
-        },
-    }
-}
-
-async fn get_user_from_identity(
-    session_identity: &Identity,
-    db: &DatabaseConnection,
-) -> Result<User, Error> {
-    User::get_by_id(session_identity.id()?.parse()?, db).await
 }

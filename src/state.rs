@@ -2,15 +2,18 @@ use std::io::Write;
 use std::path::PathBuf;
 use std::str::FromStr;
 
-use log::{debug, error, info};
+use chrono::{FixedOffset, NaiveDateTime};
+use log::{debug, error, info, warn};
 use migrations::{MigratorTrait, SchemaManager};
 use rand::{Rng, SeedableRng};
-use sea_orm::{Database, DatabaseConnection};
+use sea_orm::{Database, DatabaseConnection, EntityTrait as _};
 use tokio::sync::Mutex;
 
 use crate::config::Config;
+use crate::db::schema;
 use crate::errors::Error;
 use crate::files::{FileID, FileInfos};
+use crate::user::User;
 
 const MAX_FID_RETRIES: u32 = 20;
 
@@ -206,6 +209,46 @@ impl AppState<'_> {
             .to_string_lossy()
             .to_string();
         Ok(name)
+    }
+
+    pub async fn get_file_db_entry(
+        &self,
+        fid: FileID,
+        db: &DatabaseConnection,
+    ) -> Result<Option<schema::file::Model>, Error> {
+        Ok(crate::db::schema::prelude::File::find_by_id(fid.inner())
+            .one(db)
+            .await?)
+    }
+
+    pub fn get_expiration_offset(&self) -> chrono::TimeDelta {
+        chrono::TimeDelta::days(self.config().files.default_expiration_days as i64)
+    }
+
+    pub async fn create_file_db_entry(
+        &self,
+        fid: FileID,
+        user: &User,
+        db: &DatabaseConnection,
+    ) -> Result<(), Error> {
+        if let Some(ent) = self.get_file_db_entry(fid, db).await? {
+            warn!("Tried to insert file that already existed: {}", ent.id);
+            return Err(Error::FileExists);
+        }
+
+        let expiration = chrono::Utc::now().naive_utc() + self.get_expiration_offset();
+
+        let file_values = schema::file::ActiveModel {
+            id: sea_orm::ActiveValue::Set(fid.inner()),
+            user_id: sea_orm::ActiveValue::Set(user.id()),
+            expiration_time: sea_orm::ActiveValue::Set(expiration),
+        };
+
+        crate::db::schema::file::Entity::insert(file_values)
+            .exec(db)
+            .await?;
+
+        Ok(())
     }
 }
 

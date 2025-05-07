@@ -56,6 +56,8 @@ pub enum Error {
     SessionIdentity(#[from] actix_identity::error::GetIdentityError),
     #[error("Could not get file metadata: {0}")]
     FileInfos(#[from] crate::files::FileInfosBuilderError),
+    #[error("File exists already in the database")]
+    FileExists,
 }
 
 impl actix_web::error::ResponseError for Error {

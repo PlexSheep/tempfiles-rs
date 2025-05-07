@@ -1,6 +1,8 @@
 use std::str::FromStr;
 
+use actix_identity::Identity;
 use actix_multipart::form::MultipartForm;
+use actix_web::body::BoxBody;
 use actix_web::web::Redirect;
 use actix_web::{HttpResponse, Responder, get, post, web};
 use log::{debug, info, warn};
@@ -8,12 +10,19 @@ use log::{debug, info, warn};
 use crate::errors::Error;
 use crate::files::{FileID, FileUpload};
 use crate::state::AppState;
+use crate::user::maybe_user;
 
 #[post("/file")]
 pub async fn api_view_post_file(
     state: web::Data<AppState<'_>>,
     MultipartForm(file_upload): MultipartForm<FileUpload>,
+    identity: Option<Identity>,
 ) -> Result<impl Responder, Error> {
+    let user = maybe_user(&identity, state.db()).await?;
+    if user.is_some() || state.config().accounts.allow_anon {
+        return Ok(api_view_unauthorized());
+    }
+
     info!("Uploading File");
     debug!("file upload data: {file_upload:?}");
 
@@ -36,6 +45,10 @@ pub async fn api_view_post_file(
     std::fs::rename(file_upload.file.file.path(), &new_path).inspect_err(|e| {
         warn!("Error while uploading file: {e}");
     })?;
+
+    state
+        .create_file_db_entry(fid, user.as_ref().unwrap(), state.db())
+        .await?;
 
     Ok(HttpResponse::Ok().json(state.make_file_infos(fid, &name).await?))
 }
@@ -79,4 +92,8 @@ pub async fn api_view_get_file_fid_name_info(
     let fid = FileID::from_str(&urlargs.0)?;
     let name = urlargs.1;
     Ok(HttpResponse::Ok().json(state.make_file_infos(fid, &name).await?))
+}
+
+pub fn api_view_unauthorized() -> HttpResponse<BoxBody> {
+    HttpResponse::Unauthorized().body("You are not allowed to upload files")
 }
