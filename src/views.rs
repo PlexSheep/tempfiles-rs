@@ -82,7 +82,7 @@ pub async fn frontend_view_get_file_fid_name(
     let urlargs = urlpath.into_inner();
     let fid = FileID::from_str(&urlargs.0)?;
     let name = urlargs.1;
-    let finfo = state.make_file_infos(fid, &name)?;
+    let finfo = state.make_file_infos(fid, &name).await?;
     let ct = finfo.content_type()?;
 
     const MAX_PREVIEW_LENGTH: usize = 16384;

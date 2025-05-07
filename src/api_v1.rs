@@ -37,7 +37,7 @@ pub async fn api_view_post_file(
         warn!("Error while uploading file: {e}");
     })?;
 
-    Ok(HttpResponse::Ok().json(state.make_file_infos(fid, &name)?))
+    Ok(HttpResponse::Ok().json(state.make_file_infos(fid, &name).await?))
 }
 
 #[get("/file/{fid}")]
@@ -78,5 +78,5 @@ pub async fn api_view_get_file_fid_name_info(
     let urlargs = urlpath.into_inner();
     let fid = FileID::from_str(&urlargs.0)?;
     let name = urlargs.1;
-    Ok(HttpResponse::Ok().json(state.make_file_infos(fid, &name)?))
+    Ok(HttpResponse::Ok().json(state.make_file_infos(fid, &name).await?))
 }

@@ -54,6 +54,8 @@ pub enum Error {
     LogIn(#[from] actix_identity::error::LoginError),
     #[error("Could not get session identity: {0}")]
     SessionIdentity(#[from] actix_identity::error::GetIdentityError),
+    #[error("Could not get file metadata: {0}")]
+    FileInfos(#[from] crate::files::FileInfosBuilderError),
 }
 
 impl actix_web::error::ResponseError for Error {

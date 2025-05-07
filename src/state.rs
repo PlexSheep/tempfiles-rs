@@ -152,24 +152,29 @@ impl AppState<'_> {
         Ok(p)
     }
 
-    pub fn make_file_infos(&self, fid: FileID, name: &str) -> Result<FileInfos, Error> {
+    pub async fn make_file_infos(&self, fid: FileID, name: &str) -> Result<FileInfos, Error> {
         let path = &self.upload_datafile_for_fid(fid, name, false)?;
         let flags = magic::cookie::Flags::MIME_TYPE | magic::cookie::Flags::MIME_ENCODING;
         let cookie = magic::Cookie::open(flags)?;
         let cookie = cookie
             .load(&magic::cookie::DatabasePaths::default())
             .expect("could not load database for libmagic file type detection");
-        FileInfos::build(
-            fid,
-            name,
-            self.uri_api_file_fid_name(fid, name),
-            self.uri_api_file_fid_name_info(fid, name),
-            self.uri_frontend_file_fid_name(fid, name),
-            path,
-            mime::Mime::from_str(&cookie.file(path).unwrap_or("unknown".to_string()))
-                .unwrap_or(mime::APPLICATION_OCTET_STREAM),
-            None, // TODO: somehow add user
-        )
+
+        Ok(FileInfos::builder()
+            .fid(fid)
+            .name(name.to_owned())
+            .url_raw(self.uri_api_file_fid_name(fid, name).to_string())
+            .url_infos(self.uri_api_file_fid_name_info(fid, name).to_string())
+            .url_frontend(self.uri_frontend_file_fid_name(fid, name).to_string())
+            .content_type(
+                mime::Mime::from_str(&cookie.file(path).unwrap_or("unknown".to_string()))
+                    .unwrap_or(mime::APPLICATION_OCTET_STREAM)
+                    .to_string(),
+            )
+            .filemeta(path)?
+            .get_db_info(self.db(), fid)
+            .await?
+            .build()?)
     }
 
     pub fn get_filename_for_fid(&self, fid: FileID) -> Result<String, Error> {

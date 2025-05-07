@@ -43,6 +43,7 @@ actix-web-static-files = "4.0.1"
 static-files = "0.2.4"
 validator = { version = "0.20.0", features = ["derive"] }
 actix-identity = "0.8.0"
+derive_builder = "0.20.2"
 
 [build-dependencies]
 static-files = "0.2.4"

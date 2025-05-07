@@ -7,10 +7,12 @@ use std::time::SystemTime;
 use actix_multipart::form::{MultipartForm, tempfile::TempFile};
 use actix_web::http::Uri;
 use actix_web::http::header::ContentType;
-use chrono::Utc;
+use chrono::{NaiveDateTime, Utc};
+use derive_builder::Builder;
 use log::debug;
 use rand::distr::StandardUniform;
 use rand::prelude::*;
+use sea_orm::EntityTrait;
 use serde::{Deserialize, Serialize, Serializer};
 
 use crate::errors::Error;
@@ -22,7 +24,7 @@ pub struct FileUpload {
     pub file: TempFile,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Builder)]
 pub struct FileInfos {
     pub fid: FileID,
     pub name: String,
@@ -37,12 +39,11 @@ pub struct FileInfos {
     pub time_created: SystemTime,
     #[serde(serialize_with = "ser_uploader")]
     pub uploader: Option<User>,
-
-    // TODO: perhaps better not to show these for privacy
     #[serde(serialize_with = "ser_systime")]
     pub time_modified: SystemTime,
     #[serde(serialize_with = "ser_systime")]
     pub time_accessed: SystemTime,
+    pub time_expiration: NaiveDateTime,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -54,44 +55,61 @@ pub struct SerializeableContentType {
 #[derive(Debug, Copy, Clone, Serialize, Deserialize)]
 #[serde(transparent)]
 pub struct FileID {
-    inner: u64,
+    inner: i32,
+}
+
+impl FileID {
+    pub fn inner(&self) -> i32 {
+        self.inner
+    }
 }
 
 impl FileInfos {
-    pub fn build(
-        fid: FileID,
-        name: &str,
-        uri_raw: Uri,
-        uri_infos: Uri,
-        uri_frontend: Uri,
-        path: &Path,
-        content_type: mime::Mime,
-        uploader: Option<&User>,
-    ) -> Result<Self, Error> {
-        let fsmeta = std::fs::metadata(path)?;
-
-        debug!("Content Type of {}: {}", path.display(), content_type);
-
-        let infos = Self {
-            fid,
-            name: name.to_string(),
-            url_raw: uri_raw.to_string(),
-            url_infos: uri_infos.to_string(),
-            url_frontend: uri_frontend.to_string(),
-            size: fsmeta.size(),
-            time_created: fsmeta.created()?,
-            time_modified: fsmeta.modified()?,
-            time_accessed: fsmeta.accessed()?,
-            content_type: content_type.to_string(),
-            size_human: human_bytes::human_bytes(fsmeta.size() as u32),
-            uploader: uploader.map(|u| u.to_owned()),
-        };
-
-        Ok(infos)
+    pub fn builder() -> FileInfosBuilder {
+        FileInfosBuilder::default()
     }
 
     pub fn content_type(&self) -> Result<mime::Mime, Error> {
         Ok(mime::Mime::from_str(&self.content_type)?)
+    }
+}
+
+impl FileInfosBuilder {
+    pub fn filemeta(&mut self, path: &Path) -> Result<&mut Self, Error> {
+        let fsmeta = std::fs::metadata(path)?;
+
+        self.size(fsmeta.size())
+            .time_created(fsmeta.created()?)
+            .time_modified(fsmeta.modified()?)
+            .time_accessed(fsmeta.accessed()?)
+            .size_human(human_bytes::human_bytes(fsmeta.size() as u32));
+
+        Ok(self)
+    }
+
+    pub async fn get_db_info(
+        &mut self,
+        db: &sea_orm::DatabaseConnection,
+        fid: FileID,
+    ) -> Result<&mut Self, Error> {
+        let file_entry = crate::db::schema::prelude::File::find_by_id(fid.inner())
+            .one(db)
+            .await?;
+        if file_entry.is_some() {
+            return Err(Error::FileNotFound);
+        }
+        let file_meta = file_entry.unwrap();
+
+        let user = match User::get_by_id(file_meta.id, db).await {
+            Ok(user) => Some(user),
+            Err(Error::UserDoesNotExist) => None,
+            Err(other) => return Err(other),
+        };
+
+        self.uploader(user);
+        self.time_expiration(file_meta.expiration_time);
+
+        Ok(self)
     }
 }
 
@@ -142,6 +160,12 @@ impl From<SerializeableContentType> for ContentType {
 impl Display for SerializeableContentType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.inner)
+    }
+}
+
+impl From<FileID> for i32 {
+    fn from(value: FileID) -> Self {
+        value.inner()
     }
 }
 
