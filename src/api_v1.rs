@@ -11,7 +11,7 @@ use serde::{Serialize, Serializer};
 use crate::errors::Error;
 use crate::files::{FileID, FileUpload};
 use crate::state::AppState;
-use crate::user::maybe_user;
+use crate::user::{User, get_user_from_identity, maybe_user};
 
 #[derive(Debug, Serialize)]
 pub struct ErrorResponse {
@@ -23,12 +23,9 @@ pub struct ErrorResponse {
 pub async fn api_view_post_file(
     state: web::Data<AppState<'_>>,
     MultipartForm(file_upload): MultipartForm<FileUpload>,
-    identity: Option<Identity>,
+    identity: Identity,
 ) -> Result<impl Responder, Error> {
-    let user = maybe_user(&identity, state.db()).await?;
-    if user.is_some() || state.config().accounts.allow_anon {
-        return Ok(api_view_unauthorized());
-    }
+    let user: User = get_user_from_identity(&identity, state.db()).await?;
 
     info!("Uploading File");
     debug!("file upload data: {file_upload:?}");
@@ -53,9 +50,7 @@ pub async fn api_view_post_file(
         warn!("Error while uploading file: {e}");
     })?;
 
-    state
-        .create_file_db_entry(fid, user.as_ref().unwrap(), state.db())
-        .await?;
+    state.create_file_db_entry(fid, &user, state.db()).await?;
 
     Ok(HttpResponse::Ok().json(state.make_file_infos(fid, &name).await?))
 }
