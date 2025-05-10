@@ -52,7 +52,7 @@ async fn main() -> Result<(), Error> {
             .wrap(IdentityMiddleware::default())
             .wrap(
                 SessionMiddleware::builder(CookieSessionStore::default(), session_key)
-                    .cookie_name("auth-example".to_owned())
+                    .cookie_name("auth-tempfilesrs".to_owned())
                     .cookie_secure(false)
                     .session_lifecycle(
                         PersistentSession::default().session_ttl(Duration::hours(48)),
