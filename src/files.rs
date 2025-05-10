@@ -8,7 +8,6 @@ use actix_multipart::form::{MultipartForm, tempfile::TempFile};
 use actix_web::http::header::ContentType;
 use chrono::{NaiveDateTime, Utc};
 use derive_builder::Builder;
-use log::error;
 use rand::distr::StandardUniform;
 use rand::prelude::*;
 use sea_orm::EntityTrait;

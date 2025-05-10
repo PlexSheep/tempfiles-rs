@@ -11,7 +11,7 @@ use serde::{Serialize, Serializer};
 use crate::errors::Error;
 use crate::files::{FileID, FileUpload};
 use crate::state::AppState;
-use crate::user::{User, get_user_from_identity, maybe_user};
+use crate::user::{User, get_user_from_identity};
 
 #[derive(Debug, Serialize)]
 pub struct ErrorResponse {
