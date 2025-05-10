@@ -30,6 +30,8 @@ pub enum Error {
     NotOneFileInStorageDir(usize),
     #[error("This file does not exist on this server")]
     FileNotFound,
+    #[error("This file does not have a database entry")]
+    FileDBEntryNotFound,
     #[error("Could not parse FileID: {0}")]
     BadFileID(#[from] ParseIntError),
     #[error("Template Error: {0}")]

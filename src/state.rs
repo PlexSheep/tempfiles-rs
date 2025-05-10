@@ -175,7 +175,8 @@ impl AppState<'_> {
             )
             .filemeta(path)?
             .get_db_info(self.db(), fid)
-            .await?
+            .await
+            .inspect_err(|e| error!("Could not get DB info for file with id {fid}: {e}"))?
             .build()?)
     }
 
@@ -246,6 +247,15 @@ impl AppState<'_> {
         crate::db::schema::file::Entity::insert(file_values)
             .exec(db)
             .await?;
+
+        #[cfg(debug_assertions)]
+        {
+            let file_entry = crate::db::schema::prelude::File::find_by_id(fid.inner())
+                .one(db)
+                .await?;
+            assert!(file_entry.is_some());
+            debug!("newly created file_db_entry actually exists :)")
+        }
 
         Ok(())
     }

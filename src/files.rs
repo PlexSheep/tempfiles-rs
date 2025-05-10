@@ -8,6 +8,7 @@ use actix_multipart::form::{MultipartForm, tempfile::TempFile};
 use actix_web::http::header::ContentType;
 use chrono::{NaiveDateTime, Utc};
 use derive_builder::Builder;
+use log::error;
 use rand::distr::StandardUniform;
 use rand::prelude::*;
 use sea_orm::EntityTrait;
@@ -93,8 +94,8 @@ impl FileInfosBuilder {
         let file_entry = crate::db::schema::prelude::File::find_by_id(fid.inner())
             .one(db)
             .await?;
-        if file_entry.is_some() {
-            return Err(Error::FileNotFound);
+        if file_entry.is_none() {
+            return Err(Error::FileDBEntryNotFound);
         }
         let file_meta = file_entry.unwrap();
 
