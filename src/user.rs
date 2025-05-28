@@ -7,15 +7,17 @@ use log::debug;
 use log::error;
 use log::warn;
 use sea_orm::ActiveModelTrait;
-use sea_orm::ColumnTrait;
+use sea_orm::ColumnTrait as _;
 use sea_orm::DatabaseConnection;
 use sea_orm::EntityTrait;
-use sea_orm::QueryFilter;
+use sea_orm::ModelTrait;
+use sea_orm::QueryFilter as _;
 use serde::Deserialize;
 use serde::Serialize;
 use validator::Validate;
 
 use crate::db;
+use crate::db::schema::prelude::UserToken;
 use crate::db::schema::user::Entity as UserEntity;
 use crate::db::schema::user::Model as UserModel;
 use crate::errors::Error;
@@ -30,11 +32,23 @@ pub struct User {
 }
 
 #[derive(Debug, Deserialize, Clone, Validate)]
-pub struct UserLoginData {
+pub struct UserLoginDataWeb {
     #[validate(email)]
     email: String,
     #[validate(length(min = 10, max = 512))]
     password: String,
+}
+
+#[derive(Debug, Deserialize, Clone, Validate)]
+pub struct UserLoginDataApiV1 {
+    #[validate(length(min = 40, max = 512))]
+    token: String,
+}
+
+#[derive(Debug, Deserialize, Clone)]
+pub enum UserLoginData {
+    Web(UserLoginDataWeb),
+    ApiV1(UserLoginDataApiV1),
 }
 
 #[derive(Debug, Deserialize, Clone, Validate)]
@@ -55,6 +69,54 @@ pub enum UserKind {
     Admin,
 }
 
+impl UserLoginData {
+    fn validate(&self) -> Result<(), validator::ValidationErrors> {
+        match self {
+            Self::ApiV1(a) => a.validate(),
+            Self::Web(a) => a.validate(),
+        }
+    }
+
+    async fn find_user_with_db(&self, db: &DatabaseConnection) -> Result<Option<UserModel>, Error> {
+        match self {
+            Self::Web(a) => Ok(UserEntity::find()
+                .filter(<UserEntity as EntityTrait>::Column::Email.eq(&a.email))
+                .one(db)
+                .await?),
+            Self::ApiV1(login_data) => {
+                let tokens = UserToken::find().all(db).await?;
+                let now = chrono::Utc::now().naive_utc();
+
+                for token_model in tokens {
+                    if token_model.expiration_time < now {
+                        #[cfg(debug_assertions)] // this should likely not be printed in production
+                        warn!("APIV1 Token is expired: {}", token_model.token);
+                        continue;
+                    }
+
+                    // stored token is valid
+                    if token_model.token == login_data.token {
+                        let user = token_model.find_related(UserEntity).one(db).await?;
+                        return Ok(user);
+                    }
+                }
+                Ok(None)
+            }
+        }
+    }
+
+    async fn authenticate(
+        &self,
+        user_model: &UserModel,
+        db: &DatabaseConnection,
+    ) -> Result<(), Error> {
+        match self {
+            Self::Web(a) => User::auth_with_password(user_model, a),
+            Self::ApiV1(a) => User::auth_with_token_v1(user_model, a, db).await,
+        }
+    }
+}
+
 impl User {
     pub async fn get_by_id(id: UserID, db: &DatabaseConnection) -> Result<Self, Error> {
         let user = UserEntity::find_by_id(id).one(db).await?;
@@ -69,24 +131,14 @@ impl User {
     pub async fn login(login_data: UserLoginData, db: &DatabaseConnection) -> Result<Self, Error> {
         login_data.validate()?;
 
-        let user = UserEntity::find()
-            .filter(<UserEntity as EntityTrait>::Column::Email.eq(&login_data.email))
-            .one(db)
-            .await?;
+        let user = login_data.find_user_with_db(db).await?;
+
         if user.is_none() {
             return Err(Error::UserDoesNotExist);
         }
         let inner = user.unwrap();
 
-        let real_hash = Self::load_password_hash(&inner.password_hash)?;
-        let hashed_pass = Self::hash_password(
-            &login_data.password,
-            real_hash.salt.expect("password did not have a salt"),
-        )?;
-        if real_hash != hashed_pass {
-            warn!("Bad login attempt for {}", login_data.email);
-            return Err(Error::WrongPassword);
-        }
+        login_data.authenticate(&inner, db).await?;
 
         Ok(User { inner })
     }
@@ -115,10 +167,10 @@ impl User {
         let _new_user: UserModel = new_user.insert(db).await?;
 
         Self::login(
-            UserLoginData {
+            UserLoginData::Web(UserLoginDataWeb {
                 email: register_data.email,
                 password: register_data.password,
-            },
+            }),
             db,
         )
         .await
@@ -172,6 +224,54 @@ impl User {
 
     pub fn id(&self) -> UserID {
         self.inner.id
+    }
+
+    fn auth_with_password(
+        user_model: &UserModel,
+        login_data: &UserLoginDataWeb,
+    ) -> Result<(), Error> {
+        let real_hash = Self::load_password_hash(&user_model.password_hash)?;
+        let hashed_pass = Self::hash_password(
+            &login_data.password,
+            real_hash.salt.expect("password did not have a salt"),
+        )?;
+        if real_hash != hashed_pass {
+            warn!("Bad login attempt for {}", login_data.email);
+            Err(Error::WrongPassword)
+        } else {
+            Ok(())
+        }
+    }
+
+    async fn auth_with_token_v1(
+        user_model: &UserModel,
+        login_data: &UserLoginDataApiV1,
+        db: &DatabaseConnection,
+    ) -> Result<(), Error> {
+        let tokens = user_model.find_related(UserToken).all(db).await?;
+        let mut authenticated = false;
+        let now = chrono::Utc::now().naive_utc();
+
+        for token_model in tokens {
+            if token_model.expiration_time < now {
+                #[cfg(debug_assertions)] // this should likely not be printed in production
+                warn!("APIV1 Token is expired: {}", token_model.token);
+                continue;
+            }
+
+            // stored token is valid
+            if token_model.token == login_data.token {
+                authenticated = true;
+                break;
+            }
+        }
+
+        if !authenticated {
+            warn!("Bad login attempt for {}", user_model.email);
+            Err(Error::WrongPassword)
+        } else {
+            Ok(())
+        }
     }
 }
 
