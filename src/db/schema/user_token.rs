@@ -4,11 +4,12 @@ use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq, Serialize, Deserialize)]
-#[sea_orm(table_name = "file")]
+#[sea_orm(table_name = "user_token")]
 pub struct Model {
     #[sea_orm(primary_key, unique)]
-    pub id: i32,
+    pub token: String,
     pub user_id: i32,
+    pub creation_time: DateTime,
     pub expiration_time: DateTime,
 }
 

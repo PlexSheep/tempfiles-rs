@@ -21,18 +21,21 @@ pub struct Model {
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
-    #[sea_orm(
-        belongs_to = "super::file::Entity",
-        from = "Column::Id",
-        to = "super::file::Column::UserId"
-    )]
-    Cake,
+    #[sea_orm(has_many = "super::user_token::Entity")]
+    ApiToken,
+    #[sea_orm(has_many = "super::file::Entity")]
+    File,
 }
 
-// `Related` trait has to be implemented by hand
+impl Related<super::user_token::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::ApiToken.def()
+    }
+}
+
 impl Related<super::file::Entity> for Entity {
     fn to() -> RelationDef {
-        Relation::Cake.def()
+        Relation::File.def()
     }
 }
 
