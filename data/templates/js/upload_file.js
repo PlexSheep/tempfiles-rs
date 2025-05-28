@@ -16,6 +16,12 @@ async function sendData() {
       // Set the FormData instance as the request body
       body: formData,
     });
+    if (response.status == 401) {
+      formStatus.innerHTML =
+        "Not logged in and anonymous uploads are disabled by the administrator";
+
+      return;
+    }
     if (response.status != 200) {
       throw Error("Could not upload file");
     }
