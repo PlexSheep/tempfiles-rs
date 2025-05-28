@@ -3,28 +3,35 @@ use std::fmt::Display;
 use actix_identity::Identity;
 use argon2::PasswordHash;
 use argon2::PasswordHasher;
+use chrono::NaiveDateTime;
 use log::debug;
 use log::error;
 use log::warn;
+use rand::distr::SampleString;
 use sea_orm::ActiveModelTrait;
 use sea_orm::ColumnTrait as _;
 use sea_orm::DatabaseConnection;
 use sea_orm::EntityTrait;
 use sea_orm::ModelTrait;
 use sea_orm::QueryFilter as _;
+use sea_orm_migration::seaql_migrations::ActiveModel;
 use serde::Deserialize;
 use serde::Serialize;
 use validator::Validate;
 
 use crate::db;
-use crate::db::schema::prelude::UserToken;
 use crate::db::schema::user::Entity as UserEntity;
 use crate::db::schema::user::Model as UserModel;
+use crate::db::schema::user_token;
+use crate::db::schema::user_token::Entity as UserTokenE;
+use crate::db::schema::user_token::Model as UserTokenM;
 use crate::errors::Error;
 
 pub type UserID = i32;
 
 pub const HASH_ENCODING: argon2::password_hash::Encoding = argon2::password_hash::Encoding::B64;
+pub const APIV1_TOKEN_PREFIX: &str = "tfr_";
+pub const APIV1_TOKEN_SECRET_LEN: usize = 36;
 
 #[derive(Debug, Serialize, Clone)]
 pub struct User {
@@ -84,7 +91,7 @@ impl UserLoginData {
                 .one(db)
                 .await?),
             Self::ApiV1(login_data) => {
-                let tokens = UserToken::find().all(db).await?;
+                let tokens = UserTokenE::find().all(db).await?;
                 let now = chrono::Utc::now().naive_utc();
 
                 for token_model in tokens {
@@ -248,7 +255,7 @@ impl User {
         login_data: &UserLoginDataApiV1,
         db: &DatabaseConnection,
     ) -> Result<(), Error> {
-        let tokens = user_model.find_related(UserToken).all(db).await?;
+        let tokens = user_model.find_related(UserTokenE).all(db).await?;
         let mut authenticated = false;
         let now = chrono::Utc::now().naive_utc();
 
@@ -272,6 +279,29 @@ impl User {
         } else {
             Ok(())
         }
+    }
+
+    pub async fn create_api_v1_token(
+        &self,
+        expiration_time: NaiveDateTime,
+        rng: &mut impl rand::CryptoRng,
+        db: &DatabaseConnection,
+    ) -> Result<UserTokenM, Error> {
+        let token_secret: String =
+            rand::distr::Alphanumeric.sample_string(rng, APIV1_TOKEN_SECRET_LEN);
+        let token = format!("{APIV1_TOKEN_PREFIX}{token_secret}");
+        let now = chrono::Utc::now().naive_utc();
+
+        let token_model = user_token::ActiveModel {
+            token: sea_orm::ActiveValue::Set(token),
+            creation_time: sea_orm::ActiveValue::Set(now),
+            expiration_time: sea_orm::ActiveValue::Set(expiration_time),
+            user_id: sea_orm::ActiveValue::Set(self.id()),
+        }
+        .insert(db)
+        .await?;
+
+        Ok(token_model)
     }
 }
 
