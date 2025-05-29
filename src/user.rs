@@ -404,23 +404,6 @@ impl Display for UserKind {
     }
 }
 
-pub async fn maybe_user(
-    session_identity: &Option<Identity>,
-    db: &DatabaseConnection,
-) -> Result<Option<User>, Error> {
-    let maybe_user = match session_identity {
-        None => return Ok(None),
-        Some(i) => get_user_from_identity(i, db).await,
-    };
-    match maybe_user {
-        Ok(u) => Ok(Some(u)),
-        Err(e) => match e {
-            Error::UserDoesNotExist => Ok(None),
-            other => Err(other),
-        },
-    }
-}
-
 pub async fn get_user_from_identity(
     session_identity: &Identity,
     db: &DatabaseConnection,
