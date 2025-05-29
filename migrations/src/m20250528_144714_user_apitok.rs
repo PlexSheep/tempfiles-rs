@@ -12,11 +12,12 @@ impl MigrationTrait for Migration {
                     .table(UserToken::Table)
                     .if_not_exists()
                     .col(
-                        schema::string(UserToken::Token)
+                        schema::string(UserToken::Name)
                             .not_null()
                             .unique_key()
                             .primary_key(),
                     )
+                    .col(schema::string(UserToken::Token).not_null().unique_key())
                     .col(schema::integer(UserToken::UserId).not_null())
                     .col(schema::date_time(UserToken::CreationTime).not_null())
                     .col(schema::date_time(UserToken::ExpirationTime).not_null())
@@ -37,6 +38,7 @@ enum UserToken {
     Table,
     Token,
     UserId,
+    Name,
     ExpirationTime,
     CreationTime,
 }
