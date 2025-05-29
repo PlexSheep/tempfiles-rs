@@ -78,7 +78,8 @@ async fn main() -> Result<(), Error> {
                     .service(api_view_get_file_fid)
                     .service(api_view_post_file)
                     .service(api_view_post_auth_token)
-                    .service(api_view_get_auth_token),
+                    .service(api_view_get_auth_token)
+                    .service(api_view_delete_auth_token_name),
             )
             .default_service(web::route().to(view_default))
     })

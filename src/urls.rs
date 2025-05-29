@@ -24,6 +24,10 @@ impl AppState<'_> {
         self.uri_any(&uri_any!("/api/v1/auth/token"))
     }
 
+    pub fn uri_api_auth_token_name(&self, token_name: &str) -> Uri {
+        self.uri_any(&uri_any!("/api/v1/auth/token/{}", token_name))
+    }
+
     pub fn uri_api_file_fid(&self, fid: FileID) -> Uri {
         self.uri_any(&uri_any!("/api/v1/file/{}", fid))
     }

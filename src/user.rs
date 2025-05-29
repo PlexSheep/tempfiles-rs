@@ -343,6 +343,7 @@ impl User {
         rng: &mut impl rand::CryptoRng,
         db: &DatabaseConnection,
     ) -> Result<(String, UserTokenM), Error> {
+        request.validate()?;
         let expiration = request.expiration_timestamp();
 
         let token_secret: String =

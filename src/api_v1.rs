@@ -3,10 +3,12 @@ use std::str::FromStr;
 
 use actix_multipart::form::MultipartForm;
 use actix_web::web::Redirect;
-use actix_web::{HttpResponse, Responder, get, post, web};
+use actix_web::{HttpResponse, Responder, delete, get, post, web};
 use log::{debug, info, warn};
+use sea_orm::ModelTrait;
 use serde::{Serialize, Serializer};
 use serde_json::json;
+use validator::Validate;
 
 use crate::auth::AuthUser;
 use crate::errors::Error;
@@ -128,6 +130,29 @@ pub async fn api_view_get_auth_token(identity: AuthUser) -> Result<impl Responde
         "name": user.username(),
         "id": user.id(),
         "userKind": user.kind()?,
+    })))
+}
+
+#[delete("/auth/token/{token_name}")]
+pub async fn api_view_delete_auth_token_name(
+    state: web::Data<AppState<'_>>,
+    identity: AuthUser,
+    token_name: web::Path<String>,
+) -> Result<impl Responder, Error> {
+    let user: &User = identity.deref();
+    let tokens = user.tokens(state.db()).await?;
+    let token_name = token_name.into_inner();
+
+    let mut found = None;
+    for token in tokens {
+        if token.name == token_name {
+            found = Some(token.clone());
+            token.delete(state.db()).await?;
+        }
+    }
+
+    Ok(HttpResponse::Ok().json(json!({
+        "deleted": found,
     })))
 }
 

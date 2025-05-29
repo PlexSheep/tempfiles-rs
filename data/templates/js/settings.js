@@ -8,6 +8,15 @@ document.addEventListener('DOMContentLoaded', function() {
 	form.addEventListener('submit', async function(e) {
 		e.preventDefault();
 
+		if (tokenName.value.length < 5) {
+			tokenOutput.value = 'Name is too short (at least 5 characters)';
+			return;
+		}
+		if (tokenName.value.length > 40) {
+			tokenOutput.value = 'Name is too long (at most 40 characters)';
+			return;
+		}
+
 		// Show loading state
 		tokenOutput.value = 'Generating token...';
 
@@ -38,6 +47,8 @@ document.addEventListener('DOMContentLoaded', function() {
 		} catch (error) {
 			console.error('Error generating token:', error);
 			tokenOutput.value = 'Error generating token. Please try again.';
+		} finally {
+			window.location.reload();
 		}
 	});
 });
