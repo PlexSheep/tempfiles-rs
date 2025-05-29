@@ -8,12 +8,11 @@ use argon2::password_hash::SaltString;
 use minijinja::context;
 use serde::Serialize;
 
+use crate::auth::{AuthUser, MaybeAuthUser};
 use crate::errors::Error;
 use crate::files::FileID;
 use crate::state::AppState;
-use crate::user::{
-    self, User, UserLoginData, UserRegisterData, get_user_from_identity, maybe_user,
-};
+use crate::user::{self, User, UserLoginData, UserRegisterData};
 
 #[derive(Debug, Serialize)]
 pub struct BasicContext {
@@ -31,9 +30,9 @@ impl BasicContext {
 
 async fn frontend_view_inner_index(
     state: web::Data<AppState<'_>>,
-    identity: Option<Identity>,
+    identity: MaybeAuthUser,
 ) -> Result<impl Responder, Error> {
-    let user = maybe_user(&identity, state.db()).await?;
+    let user: Option<User> = identity.user();
 
     let content: String = state
         .templating()
@@ -45,7 +44,7 @@ async fn frontend_view_inner_index(
 #[get("/")]
 pub async fn frontend_view_get_index(
     state: web::Data<AppState<'_>>,
-    identity: Option<Identity>,
+    identity: MaybeAuthUser,
 ) -> Result<impl Responder, Error> {
     frontend_view_inner_index(state, identity).await
 }
@@ -53,7 +52,7 @@ pub async fn frontend_view_get_index(
 #[post("/")]
 pub async fn frontend_view_post_index(
     state: web::Data<AppState<'_>>,
-    identity: Option<Identity>,
+    identity: MaybeAuthUser,
 ) -> Result<impl Responder, Error> {
     frontend_view_inner_index(state, identity).await
 }
@@ -61,7 +60,6 @@ pub async fn frontend_view_post_index(
 #[get("/file/{fid}")]
 pub async fn frontend_view_get_file_fid(
     state: web::Data<AppState<'_>>,
-    // identity: Option<Identity>,
     path: web::Path<String>,
 ) -> Result<impl Responder, Error> {
     let fid: crate::files::FileID = FileID::from_str(&path.into_inner())?;
@@ -75,10 +73,10 @@ pub async fn frontend_view_get_file_fid(
 #[get("/file/{fid}/{name}")]
 pub async fn frontend_view_get_file_fid_name(
     state: web::Data<AppState<'_>>,
-    identity: Option<Identity>,
+    identity: MaybeAuthUser,
     urlpath: web::Path<(String, String)>,
 ) -> Result<impl Responder, Error> {
-    let user = maybe_user(&identity, state.db()).await?;
+    let user = identity.user();
 
     let urlargs = urlpath.into_inner();
     let fid = FileID::from_str(&urlargs.0)?;
@@ -116,9 +114,9 @@ pub async fn view_default() -> HttpResponse {
 #[get("/login")]
 pub async fn frontend_view_get_login(
     state: web::Data<AppState<'_>>,
-    identity: Option<Identity>,
+    identity: MaybeAuthUser,
 ) -> Result<impl Responder, Error> {
-    let user = maybe_user(&identity, state.db()).await?;
+    let user = identity.user();
 
     let content: String = state
         .templating()
@@ -141,12 +139,12 @@ pub async fn frontend_view_post_login(
 #[get("/logout")]
 pub async fn frontend_view_get_logout(
     state: web::Data<AppState<'_>>,
-    identity: Option<Identity>,
+    identity: MaybeAuthUser,
 ) -> Result<impl Responder, Error> {
-    if let Some(session_identity) = identity {
-        let user = get_user_from_identity(&session_identity, state.db()).await?;
-        user.logout(state.db()).await?;
-        session_logout(session_identity)?;
+    let user = identity.inner();
+    if user.as_ref().is_some_and(|u| u.identity_ref().is_some()) {
+        let user = user.unwrap();
+        session_logout(user.identity().unwrap())?;
     }
     Ok(Redirect::to(state.uri_frontend_index().to_string()))
 }
@@ -154,9 +152,9 @@ pub async fn frontend_view_get_logout(
 #[get("/register")]
 pub async fn frontend_view_get_register(
     state: web::Data<AppState<'_>>,
-    identity: Option<Identity>,
+    identity: MaybeAuthUser,
 ) -> Result<impl Responder, Error> {
-    let user = maybe_user(&identity, state.db()).await?;
+    let user = identity.user();
 
     let content: String = state
         .templating()
@@ -188,9 +186,9 @@ pub async fn frontend_view_post_register(
 #[get("/settings")]
 pub async fn frontend_view_get_settings(
     state: web::Data<AppState<'_>>,
-    identity: Identity,
+    identity: AuthUser,
 ) -> Result<impl Responder, Error> {
-    let user = get_user_from_identity(&identity, state.db()).await?;
+    let user = identity.user();
 
     let content: String = state
         .templating()

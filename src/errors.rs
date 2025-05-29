@@ -62,6 +62,8 @@ pub enum Error {
     FileExists,
     #[error("User not authorized for this action")]
     Unauthorized,
+    #[error("Unknown user kind: {0}")]
+    UnknownUserKind(String),
 }
 
 impl actix_web::error::ResponseError for Error {

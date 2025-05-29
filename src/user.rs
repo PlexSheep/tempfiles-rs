@@ -1,4 +1,5 @@
 use std::fmt::Display;
+use std::str::FromStr;
 
 use actix_identity::Identity;
 use argon2::PasswordHash;
@@ -42,15 +43,15 @@ pub struct User {
 #[derive(Debug, Deserialize, Clone, Validate)]
 pub struct UserLoginDataWeb {
     #[validate(email)]
-    email: String,
+    pub email: String,
     #[validate(length(min = 10, max = 512))]
-    password: String,
+    pub password: String,
 }
 
 #[derive(Debug, Deserialize, Clone, Validate)]
 pub struct UserLoginDataApiV1 {
     #[validate(length(min = 40, max = 512))]
-    token: String,
+    pub token: String,
 }
 
 #[derive(Debug, Deserialize, Clone)]
@@ -69,7 +70,7 @@ pub struct UserRegisterData {
     username: String,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize)]
 pub enum UserKind {
     Anonymous,
     #[default]
@@ -89,6 +90,19 @@ pub enum CredentialDuration {
 pub struct ApiV1TokenRequest {
     #[serde(rename = "tokenDuration")]
     pub requested_duration: CredentialDuration,
+}
+
+impl FromStr for UserKind {
+    type Err = Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(match s {
+            "administrator" => Self::Admin,
+            "standard" => Self::Standard,
+            "anonymous" => Self::Anonymous,
+            other => return Err(Error::UnknownUserKind(other.to_string())),
+        })
+    }
 }
 
 impl From<CredentialDuration> for chrono::TimeDelta {
@@ -208,10 +222,6 @@ impl User {
         .await
     }
 
-    pub async fn logout(self, _db: &DatabaseConnection) -> Result<(), Error> {
-        Ok(()) // implicit drop of self
-    }
-
     fn argon2<'t>() -> argon2::Argon2<'t> {
         argon2::Argon2::default()
     }
@@ -256,6 +266,10 @@ impl User {
 
     pub fn id(&self) -> UserID {
         self.inner.id
+    }
+
+    pub fn kind(&self) -> Result<UserKind, Error> {
+        UserKind::from_str(&self.inner.kind)
     }
 
     fn auth_with_password(

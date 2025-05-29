@@ -20,6 +20,10 @@ macro_rules! uri_any {
 
 #[allow(unused)] // it's just urls, keep those
 impl AppState<'_> {
+    pub fn uri_api_auth_token(&self) -> Uri {
+        self.uri_any(&uri_any!("/api/v1/auth/token"))
+    }
+
     pub fn uri_api_file_fid(&self, fid: FileID) -> Uri {
         self.uri_any(&uri_any!("/api/v1/file/{}", fid))
     }

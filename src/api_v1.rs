@@ -1,6 +1,6 @@
+use std::ops::Deref;
 use std::str::FromStr;
 
-use actix_identity::Identity;
 use actix_multipart::form::MultipartForm;
 use actix_web::body::BoxBody;
 use actix_web::web::Redirect;
@@ -9,10 +9,11 @@ use log::{debug, info, warn};
 use serde::{Serialize, Serializer};
 use serde_json::json;
 
+use crate::auth::AuthUser;
 use crate::errors::Error;
 use crate::files::{FileID, FileUpload};
 use crate::state::AppState;
-use crate::user::{ApiV1TokenRequest, User, get_user_from_identity};
+use crate::user::{ApiV1TokenRequest, User};
 
 #[derive(Debug, Serialize)]
 pub struct ErrorResponse {
@@ -24,9 +25,9 @@ pub struct ErrorResponse {
 pub async fn api_view_post_file(
     state: web::Data<AppState<'_>>,
     MultipartForm(file_upload): MultipartForm<FileUpload>,
-    identity: Identity,
+    identity: AuthUser,
 ) -> Result<impl Responder, Error> {
-    let user: User = get_user_from_identity(&identity, state.db()).await?;
+    let user: &User = identity.deref();
 
     info!("Uploading File");
     debug!("file upload data: {file_upload:?}");
@@ -101,9 +102,9 @@ pub async fn api_view_get_file_fid_name_info(
 pub async fn api_view_post_auth_token(
     state: web::Data<AppState<'_>>,
     web::Form(token_request): web::Form<ApiV1TokenRequest>,
-    identity: Identity,
+    identity: AuthUser,
 ) -> Result<impl Responder, Error> {
-    let user: User = get_user_from_identity(&identity, state.db()).await?;
+    let user: &User = identity.deref();
 
     info!("Creating new token for user: {}", user.email());
 
@@ -117,6 +118,19 @@ pub async fn api_view_post_auth_token(
     Ok(HttpResponse::Ok().json(json!({
         "token": &tok.token,
         "expiration": expiration
+    })))
+}
+
+#[get("/auth/token")]
+pub async fn api_view_get_auth_token(identity: AuthUser) -> Result<impl Responder, Error> {
+    let user: &User = identity.deref();
+
+    Ok(HttpResponse::Ok().json(json!({
+        "authenticated": true,
+        "email": user.email(),
+        "name": user.username(),
+        "id": user.id(),
+        "userKind": user.kind()?,
     })))
 }
 

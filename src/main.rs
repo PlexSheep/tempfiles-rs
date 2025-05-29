@@ -14,6 +14,7 @@ use env_logger::Env;
 use log::trace;
 
 mod api_v1;
+mod auth;
 mod config;
 mod db;
 mod errors;
@@ -76,7 +77,8 @@ async fn main() -> Result<(), Error> {
                     .service(api_view_get_file_fid_name_info)
                     .service(api_view_get_file_fid)
                     .service(api_view_post_file)
-                    .service(api_view_post_auth_token),
+                    .service(api_view_post_auth_token)
+                    .service(api_view_get_auth_token),
             )
             .default_service(web::route().to(view_default))
     })
