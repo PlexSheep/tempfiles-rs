@@ -17,14 +17,18 @@ use crate::user::{self, User, UserLoginData, UserRegisterData};
 #[derive(Debug, Serialize)]
 pub struct BasicContext {
     user: Option<user::User>,
+    base_url: String,
 }
 
 impl BasicContext {
     pub async fn build(
-        _state: &web::Data<AppState<'_>>,
+        state: &web::Data<AppState<'_>>,
         user: Option<user::User>,
     ) -> Result<Self, Error> {
-        Ok(BasicContext { user })
+        Ok(BasicContext {
+            user,
+            base_url: state.config().service.base_url.clone(),
+        })
     }
 }
 

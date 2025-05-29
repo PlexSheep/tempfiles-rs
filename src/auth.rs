@@ -51,9 +51,12 @@ impl FromRequest for AuthUser {
                             // Use existing authentication logic
                             match User::login(login_data, state.db()).await {
                                 Ok(user) => return Ok(AuthUser(user, None)),
-                                Err(_) => {
-                                    // Token authentication failed, continue to try session
-                                }
+                                Err(e) => match e {
+                                    crate::errors::Error::WrongPassword => {
+                                        return Err(ErrorUnauthorized("Invalid Credentials"));
+                                    }
+                                    _other => (),
+                                },
                             }
                         }
                     }

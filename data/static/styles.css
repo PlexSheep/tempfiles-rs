@@ -1,10 +1,15 @@
 .fileUploadInputBox:hover {
-  transition: 0.5s ease;
-  opacity: 0.5;
+	transition: 0.5s ease;
+	opacity: 0.5;
 }
 
 #preview-actual {
-  max-width: 25vw;
-  height: auto;
-  width: auto;
+	max-width: 25vw;
+	height: auto;
+	width: auto;
+}
+
+pre,
+code {
+	white-space: pre-line;
 }
