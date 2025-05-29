@@ -14,7 +14,6 @@ use sea_orm::DatabaseConnection;
 use sea_orm::EntityTrait;
 use sea_orm::ModelTrait;
 use sea_orm::QueryFilter as _;
-use sea_orm_migration::seaql_migrations::ActiveModel;
 use serde::Deserialize;
 use serde::Serialize;
 use serde_repr::Deserialize_repr;
@@ -83,7 +82,7 @@ pub enum UserKind {
 pub enum CredentialDuration {
     D30 = 30,
     D90 = 90,
-    D345 = 345,
+    D365 = 365,
 }
 
 #[derive(Debug, Deserialize, Clone)]
@@ -97,7 +96,7 @@ impl From<CredentialDuration> for chrono::TimeDelta {
         chrono::TimeDelta::days(match value {
             CredentialDuration::D30 => 30,
             CredentialDuration::D90 => 90,
-            CredentialDuration::D345 => 345,
+            CredentialDuration::D365 => 345,
         })
     }
 }
