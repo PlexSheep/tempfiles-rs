@@ -56,7 +56,6 @@ pub struct UserLoginDataApiV1 {
 
 #[derive(Debug, Deserialize, Clone)]
 pub enum UserLoginData {
-    #[serde(flatten)]
     Web(UserLoginDataWeb),
     ApiV1(UserLoginDataApiV1),
 }

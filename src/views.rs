@@ -13,7 +13,7 @@ use crate::db::schema::user_token::Model as UserTokenM;
 use crate::errors::Error;
 use crate::files::FileID;
 use crate::state::AppState;
-use crate::user::{self, User, UserLoginData, UserRegisterData};
+use crate::user::{self, User, UserLoginData, UserLoginDataWeb, UserRegisterData};
 
 #[derive(Debug, Serialize)]
 pub struct BasicContext {
@@ -134,9 +134,9 @@ pub async fn frontend_view_get_login(
 pub async fn frontend_view_post_login(
     req: HttpRequest,
     state: web::Data<AppState<'_>>,
-    web::Form(login_data): web::Form<UserLoginData>,
+    web::Form(login_data): web::Form<UserLoginDataWeb>,
 ) -> Result<impl Responder, Error> {
-    let user = User::login(login_data, state.db()).await?;
+    let user = User::login(UserLoginData::Web(login_data), state.db()).await?;
     session_login(&req, &user)?;
     Ok(Redirect::to(state.uri_frontend_index().to_string()))
 }
