@@ -8,7 +8,6 @@ use log::{debug, info, warn};
 use sea_orm::ModelTrait;
 use serde::{Serialize, Serializer};
 use serde_json::json;
-use validator::Validate;
 
 use crate::auth::AuthUser;
 use crate::errors::Error;
