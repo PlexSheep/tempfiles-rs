@@ -54,7 +54,7 @@ pub async fn api_view_post_file(
 
     state.create_file_db_entry(fid, user, state.db()).await?;
 
-    Ok(HttpResponse::Ok().json(state.make_file_infos(fid, &name).await?))
+    Ok(HttpResponse::Ok().json(state.make_file_infos(fid, &name, state.db()).await?))
 }
 
 #[get("/file/{fid}")]
@@ -95,7 +95,7 @@ pub async fn api_view_get_file_fid_name_info(
     let urlargs = urlpath.into_inner();
     let fid = FileID::from_str(&urlargs.0)?;
     let name = urlargs.1;
-    Ok(HttpResponse::Ok().json(state.make_file_infos(fid, &name).await?))
+    Ok(HttpResponse::Ok().json(state.make_file_infos(fid, &name, state.db()).await?))
 }
 
 #[post("/auth/token")]

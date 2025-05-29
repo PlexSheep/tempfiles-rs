@@ -33,14 +33,11 @@ pub struct FileInfos {
     /// human readable size
     pub size_human: String,
     pub content_type: String,
-    #[serde(serialize_with = "ser_systime")]
-    pub time_created: SystemTime,
+    pub time_created: NaiveDateTime,
     #[serde(serialize_with = "ser_uploader")]
     pub uploader: Option<User>,
-    #[serde(serialize_with = "ser_systime")]
-    pub time_modified: SystemTime,
-    #[serde(serialize_with = "ser_systime")]
-    pub time_accessed: SystemTime,
+    pub time_modified: NaiveDateTime,
+    pub time_accessed: NaiveDateTime,
     pub time_expiration: NaiveDateTime,
 }
 
@@ -77,9 +74,9 @@ impl FileInfosBuilder {
         let fsmeta = std::fs::metadata(path)?;
 
         self.size(fsmeta.size())
-            .time_created(fsmeta.created()?)
-            .time_modified(fsmeta.modified()?)
-            .time_accessed(fsmeta.accessed()?)
+            .time_created(systime_to_chrono(fsmeta.created()?))
+            .time_modified(systime_to_chrono(fsmeta.modified()?))
+            .time_accessed(systime_to_chrono(fsmeta.accessed()?))
             .size_human(human_bytes::human_bytes(fsmeta.size() as u32));
 
         Ok(self)
@@ -167,16 +164,16 @@ impl From<FileID> for i32 {
     }
 }
 
-fn ser_systime<S: Serializer>(time: &SystemTime, s: S) -> Result<S::Ok, S::Error> {
-    let datetime: chrono::DateTime<Utc> = chrono::DateTime::from(*time);
-    format!("{datetime}").serialize(s)
-}
-
 fn ser_uploader<S: Serializer>(user: &Option<User>, s: S) -> Result<S::Ok, S::Error> {
     match user {
         None => "Anonymous".serialize(s),
         Some(user) => user.username().serialize(s),
     }
+}
+
+fn systime_to_chrono(t: SystemTime) -> chrono::NaiveDateTime {
+    let datetime: chrono::DateTime<Utc> = chrono::DateTime::from(t);
+    datetime.naive_utc()
 }
 
 #[cfg(test)]

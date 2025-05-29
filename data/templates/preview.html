@@ -13,7 +13,7 @@
             <td>{{ finfo.size_human }}</td>
           </tr>
           <tr>
-            <th>URL</th>
+            <th>URL (Raw)</th>
             <td>
               <a target="_blank" href="{{ finfo.url_raw }}"
                 >{{ finfo.url_raw }}</a
@@ -21,8 +21,12 @@
             </td>
           </tr>
           <tr>
+            <th>Uploader</th>
+				<td>{{ finfo.uploader }}</td>
+          </tr>
+          <tr>
             <th>Expires</th>
-            <td>{{ finfo.expires }}</td>
+            <td>{{ finfo.time_expiration }}</td>
           </tr>
           <tr>
             <th>Uploaded</th>
