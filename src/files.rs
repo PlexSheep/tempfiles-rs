@@ -14,6 +14,7 @@ use rand::prelude::*;
 use sea_orm::EntityTrait;
 use serde::{Deserialize, Serialize, Serializer};
 
+use crate::db::types::{RawFileID, RawUserID};
 use crate::errors::Error;
 use crate::user::User;
 
@@ -51,11 +52,11 @@ pub struct SerializeableContentType {
 #[derive(Debug, Copy, Clone, Serialize, Deserialize)]
 #[serde(transparent)]
 pub struct FileID {
-    inner: i32,
+    inner: RawFileID,
 }
 
 impl FileID {
-    pub fn inner(&self) -> i32 {
+    pub fn inner(&self) -> RawFileID {
         self.inner
     }
 }
@@ -164,9 +165,15 @@ impl Display for SerializeableContentType {
     }
 }
 
-impl From<FileID> for i32 {
+impl From<FileID> for RawFileID {
     fn from(value: FileID) -> Self {
         value.inner()
+    }
+}
+
+impl From<RawFileID> for FileID {
+    fn from(inner: RawFileID) -> Self {
+        FileID { inner }
     }
 }
 

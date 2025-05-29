@@ -3,12 +3,14 @@
 use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
+use crate::db::types::RawUserID;
+
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq, Serialize, Deserialize)]
 #[sea_orm(table_name = "file")]
 pub struct Model {
     #[sea_orm(primary_key, unique)]
-    pub id: i32,
-    pub user_id: i32,
+    pub id: RawUserID,
+    pub user_id: RawUserID,
     pub expiration_time: DateTime,
 }
 

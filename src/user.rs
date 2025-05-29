@@ -27,13 +27,14 @@ use crate::db::schema::user::Model as UserModel;
 use crate::db::schema::user_token;
 use crate::db::schema::user_token::Entity as UserTokenE;
 use crate::db::schema::user_token::Model as UserTokenM;
+use crate::db::types::RawUserID;
 use crate::errors::Error;
-
-pub type UserID = i32;
 
 pub const HASH_ENCODING: argon2::password_hash::Encoding = argon2::password_hash::Encoding::B64;
 pub const APIV1_TOKEN_PREFIX: &str = "tfr_";
 pub const APIV1_TOKEN_SECRET_LEN: usize = 36;
+
+pub type UserID = RawUserID;
 
 #[derive(Debug, Serialize, Clone)]
 pub struct User {

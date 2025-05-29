@@ -3,6 +3,8 @@
 use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
+use crate::db::types::RawUserID;
+
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq, Serialize, Deserialize)]
 #[sea_orm(table_name = "user_token")]
 pub struct Model {
@@ -10,7 +12,7 @@ pub struct Model {
     pub name: String,
     #[sea_orm(unique)]
     pub token_hash: String,
-    pub user_id: i32,
+    pub user_id: RawUserID,
     pub creation_time: DateTime,
     pub expiration_time: DateTime,
 }
