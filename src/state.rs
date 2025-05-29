@@ -10,6 +10,7 @@ use tokio::sync::Mutex;
 
 use crate::config::Config;
 use crate::db::schema;
+use crate::db::schema::file::{Entity as FileE, Model as FileM};
 use crate::errors::Error;
 use crate::files::{FileID, FileInfos};
 use crate::user::User;
@@ -121,7 +122,12 @@ impl AppState<'_> {
         path.exists()
     }
 
-    pub fn upload_dir_for_fid(&self, fid: FileID, create: bool) -> Result<PathBuf, Error> {
+    pub fn upload_dir_for_fid(
+        &self,
+        fid: impl Into<FileID>,
+        create: bool,
+    ) -> Result<PathBuf, Error> {
+        let fid: FileID = fid.into();
         let mut p = self.storage_dir();
         p.push(fid.to_string());
         if create {
@@ -263,8 +269,8 @@ impl AppState<'_> {
         tokio::time::Duration::from_secs(60 * self.config().service.clear_interval as u64)
     }
 
-    pub async fn files(&self) -> Vec<(FileInfos)> {
-        todo!()
+    pub async fn files(&self) -> Result<Vec<FileM>, Error> {
+        Ok(FileE::find().all(self.db()).await?)
     }
 }
 

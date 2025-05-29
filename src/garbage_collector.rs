@@ -1,5 +1,6 @@
 use actix_web::web::Data;
-use log::{error, info};
+use log::{debug, error, info};
+use sea_orm::ModelTrait;
 
 use crate::{errors::Error, state::AppState as InnerAppState};
 
@@ -15,7 +16,19 @@ pub async fn garbage_collector(state: AppState<'_>) {
     }
 }
 
-async fn clear_expired_files(_state: AppState<'_>) -> Result<(), Error> {
+async fn clear_expired_files(state: AppState<'_>) -> Result<(), Error> {
+    let now = chrono::Utc::now().naive_utc();
+    for file in state.files().await? {
+        if file.expiration_time < now {
+            info!("File has expired: {}", file.id);
+            let file_dir = state.upload_dir_for_fid(file.id, false)?;
+            std::fs::remove_dir_all(file_dir)?;
+            file.delete(state.db()).await?;
+        } else {
+            #[cfg(debug_assertions)]
+            debug!("File is not expired but was checked: {}", file.id)
+        }
+    }
     Ok(())
 }
 
