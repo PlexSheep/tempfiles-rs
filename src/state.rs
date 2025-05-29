@@ -228,7 +228,14 @@ impl AppState<'_> {
     }
 
     pub fn get_expiration_offset(&self) -> chrono::TimeDelta {
-        chrono::TimeDelta::days(self.config().files.default_expiration_days as i64)
+        #[cfg(not(feature = "devel-quickcycle"))]
+        {
+            chrono::TimeDelta::days(self.config().files.default_expiration_days as i64)
+        }
+        #[cfg(feature = "devel-quickcycle")]
+        {
+            chrono::TimeDelta::minutes(3)
+        }
     }
 
     pub async fn create_file_db_entry(
@@ -265,8 +272,15 @@ impl AppState<'_> {
 
         Ok(())
     }
-    pub fn garbage_collection_duraiton(&self) -> tokio::time::Duration {
-        tokio::time::Duration::from_secs(60 * self.config().service.clear_interval as u64)
+    pub fn garbage_collection_duration(&self) -> tokio::time::Duration {
+        #[cfg(not(feature = "devel-quickcycle"))]
+        {
+            tokio::time::Duration::from_secs(60 * self.config().service.clear_interval as u64)
+        }
+        #[cfg(feature = "devel-quickcycle")]
+        {
+            tokio::time::Duration::from_secs(60)
+        }
     }
 
     pub async fn files(&self) -> Result<Vec<FileM>, Error> {

@@ -12,7 +12,7 @@ pub async fn garbage_collector(state: AppState<'_>) {
         run_with_guard(async || clear_expired_files(state.clone()).await).await;
 
         info!("Workload finished, sleeping until next interval");
-        tokio::time::sleep(state.garbage_collection_duraiton()).await;
+        tokio::time::sleep(state.garbage_collection_duration()).await;
     }
 }
 
