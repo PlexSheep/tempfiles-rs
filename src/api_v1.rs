@@ -52,7 +52,7 @@ pub async fn api_view_post_file(
         warn!("Error while uploading file: {e}");
     })?;
 
-    state.create_file_db_entry(fid, &user, state.db()).await?;
+    state.create_file_db_entry(fid, user, state.db()).await?;
 
     Ok(HttpResponse::Ok().json(state.make_file_infos(fid, &name).await?))
 }
