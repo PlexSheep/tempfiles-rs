@@ -29,7 +29,7 @@ pub struct BasicContext {
 
 impl BasicContext {
     pub async fn build(
-        state: &web::Data<AppState<'_>>,
+        state: &web::Data<AppState>,
         user: Option<user::User>,
     ) -> Result<Self, Error> {
         let authors = env!("CARGO_PKG_AUTHORS").to_string();
@@ -50,13 +50,13 @@ impl BasicContext {
 }
 
 async fn frontend_view_inner_index(
-    state: web::Data<AppState<'_>>,
+    state: web::Data<AppState>,
     identity: MaybeAuthUser,
 ) -> Result<impl Responder, Error> {
     let user: Option<User> = identity.user();
 
     let content: String = state
-        .templating()
+        .templating()?
         .get_template("index.html")?
         .render(context!(bctx => BasicContext::build(&state, user).await?))?;
     Ok(HttpResponse::Ok().body(content))
@@ -64,7 +64,7 @@ async fn frontend_view_inner_index(
 
 #[get("/")]
 pub async fn frontend_view_get_index(
-    state: web::Data<AppState<'_>>,
+    state: web::Data<AppState>,
     identity: MaybeAuthUser,
 ) -> Result<impl Responder, Error> {
     frontend_view_inner_index(state, identity).await
@@ -72,7 +72,7 @@ pub async fn frontend_view_get_index(
 
 #[post("/")]
 pub async fn frontend_view_post_index(
-    state: web::Data<AppState<'_>>,
+    state: web::Data<AppState>,
     identity: MaybeAuthUser,
 ) -> Result<impl Responder, Error> {
     frontend_view_inner_index(state, identity).await
@@ -80,12 +80,12 @@ pub async fn frontend_view_post_index(
 
 #[get("/about")]
 pub async fn frontend_view_get_about(
-    state: web::Data<AppState<'_>>,
+    state: web::Data<AppState>,
     identity: MaybeAuthUser,
 ) -> Result<impl Responder, Error> {
     let user: Option<User> = identity.user();
     let content: String = state
-        .templating()
+        .templating()?
         .get_template("about.html")?
         .render(context!(bctx => BasicContext::build(&state, user).await?))?;
     Ok(HttpResponse::Ok().body(content))
@@ -93,7 +93,7 @@ pub async fn frontend_view_get_about(
 
 #[get("/file/{fid}")]
 pub async fn frontend_view_get_file_fid(
-    state: web::Data<AppState<'_>>,
+    state: web::Data<AppState>,
     path: web::Path<String>,
 ) -> Result<impl Responder, Error> {
     let fid: crate::files::FileID = FileID::from_str(&path.into_inner())?;
@@ -106,7 +106,7 @@ pub async fn frontend_view_get_file_fid(
 
 #[get("/file/{fid}/{name}")]
 pub async fn frontend_view_get_file_fid_name(
-    state: web::Data<AppState<'_>>,
+    state: web::Data<AppState>,
     identity: MaybeAuthUser,
     urlpath: web::Path<(String, String)>,
 ) -> Result<impl Responder, Error> {
@@ -129,7 +129,7 @@ pub async fn frontend_view_get_file_fid_name(
     }
 
     let content: String = state
-        .templating()
+        .templating()?
         .get_template("preview.html")?
         .render(context!(
             bctx => BasicContext::build(&state, user).await?,
@@ -147,13 +147,13 @@ pub async fn view_default() -> HttpResponse {
 
 #[get("/login")]
 pub async fn frontend_view_get_login(
-    state: web::Data<AppState<'_>>,
+    state: web::Data<AppState>,
     identity: MaybeAuthUser,
 ) -> Result<impl Responder, Error> {
     let user = identity.user();
 
     let content: String = state
-        .templating()
+        .templating()?
         .get_template("login.html")?
         .render(context!(bctx => BasicContext::build(&state, user).await?))?;
     Ok(HttpResponse::Ok().body(content))
@@ -162,7 +162,7 @@ pub async fn frontend_view_get_login(
 #[post("/login")]
 pub async fn frontend_view_post_login(
     req: HttpRequest,
-    state: web::Data<AppState<'_>>,
+    state: web::Data<AppState>,
     web::Form(login_data): web::Form<UserLoginDataWeb>,
 ) -> Result<impl Responder, Error> {
     let user = User::login(UserLoginData::Web(login_data), state.db()).await?;
@@ -172,7 +172,7 @@ pub async fn frontend_view_post_login(
 
 #[get("/logout")]
 pub async fn frontend_view_get_logout(
-    state: web::Data<AppState<'_>>,
+    state: web::Data<AppState>,
     identity: MaybeAuthUser,
 ) -> Result<impl Responder, Error> {
     let user = identity.inner();
@@ -185,13 +185,13 @@ pub async fn frontend_view_get_logout(
 
 #[get("/register")]
 pub async fn frontend_view_get_register(
-    state: web::Data<AppState<'_>>,
+    state: web::Data<AppState>,
     identity: MaybeAuthUser,
 ) -> Result<impl Responder, Error> {
     let user = identity.user();
 
     let content: String = state
-        .templating()
+        .templating()?
         .get_template("register.html")?
         .render(context!(bctx => BasicContext::build(&state, user).await?))?;
     Ok(HttpResponse::Ok().body(content))
@@ -200,7 +200,7 @@ pub async fn frontend_view_get_register(
 #[post("/register")]
 pub async fn frontend_view_post_register(
     req: HttpRequest,
-    state: web::Data<AppState<'_>>,
+    state: web::Data<AppState>,
     web::Form(register_data): web::Form<UserRegisterData>,
 ) -> Result<impl Responder, Error> {
     // HACK: This should use the csprng of the AppState, but that seems incompatible somehow?
@@ -219,13 +219,13 @@ pub async fn frontend_view_post_register(
 
 #[get("/settings")]
 pub async fn frontend_view_get_settings(
-    state: web::Data<AppState<'_>>,
+    state: web::Data<AppState>,
     identity: AuthUser,
 ) -> Result<impl Responder, Error> {
     let user = identity.user();
     let tokens: Vec<UserTokenM> = user.tokens(state.db()).await?;
 
-    let content: String = state.templating().get_template("settings.html")?.render(
+    let content: String = state.templating()?.get_template("settings.html")?.render(
         context!(bctx => BasicContext::build(&state, Some(user)).await?, tokens => tokens),
     )?;
     Ok(HttpResponse::Ok().body(content))

@@ -4,9 +4,9 @@ use sea_orm::ModelTrait;
 
 use crate::{errors::Error, state::AppState as InnerAppState};
 
-type AppState<'a> = Data<InnerAppState<'a>>;
+type AppState = Data<InnerAppState>;
 
-pub async fn garbage_collector(state: AppState<'_>) {
+pub async fn garbage_collector(state: AppState) {
     loop {
         info!("Running garbage collector workload");
         run_with_guard(async || clear_expired_files(state.clone()).await).await;
@@ -16,7 +16,7 @@ pub async fn garbage_collector(state: AppState<'_>) {
     }
 }
 
-async fn clear_expired_files(state: AppState<'_>) -> Result<(), Error> {
+async fn clear_expired_files(state: AppState) -> Result<(), Error> {
     let now = chrono::Utc::now().naive_utc();
     for file in state.files().await? {
         if file.expiration_time < now {

@@ -23,7 +23,7 @@ pub struct ErrorResponse {
 
 #[post("/file")]
 pub async fn api_view_post_file(
-    state: web::Data<AppState<'_>>,
+    state: web::Data<AppState>,
     MultipartForm(file_upload): MultipartForm<FileUpload>,
     identity: AuthUser,
 ) -> Result<impl Responder, Error> {
@@ -59,7 +59,7 @@ pub async fn api_view_post_file(
 
 #[get("/file/{fid}")]
 pub async fn api_view_get_file_fid(
-    state: web::Data<AppState<'_>>,
+    state: web::Data<AppState>,
     path: web::Path<String>,
 ) -> Result<impl Responder, Error> {
     let fid: crate::files::FileID = FileID::from_str(&path.into_inner())?;
@@ -73,7 +73,7 @@ pub async fn api_view_get_file_fid(
 #[get("/file/{fid}/{filename}")]
 pub async fn api_view_get_file_fid_name(
     req: actix_web::HttpRequest,
-    state: web::Data<AppState<'_>>,
+    state: web::Data<AppState>,
     urlpath: web::Path<(String, String)>,
 ) -> Result<impl Responder, Error> {
     info!("Downloading file for fid");
@@ -88,7 +88,7 @@ pub async fn api_view_get_file_fid_name(
 
 #[get("/file/{fid}/{filename}/info")]
 pub async fn api_view_get_file_fid_name_info(
-    state: web::Data<AppState<'_>>,
+    state: web::Data<AppState>,
     urlpath: web::Path<(String, String)>,
 ) -> Result<impl Responder, Error> {
     info!("Get information on file for fid");
@@ -102,7 +102,7 @@ pub async fn api_view_get_file_fid_name_info(
 
 #[post("/auth/token")]
 pub async fn api_view_post_auth_token(
-    state: web::Data<AppState<'_>>,
+    state: web::Data<AppState>,
     web::Form(token_request): web::Form<ApiV1TokenRequest>,
     identity: AuthUser,
 ) -> Result<impl Responder, Error> {
@@ -136,7 +136,7 @@ pub async fn api_view_get_auth_token(identity: AuthUser) -> Result<impl Responde
 
 #[delete("/auth/token/{token_name}")]
 pub async fn api_view_delete_auth_token_name(
-    state: web::Data<AppState<'_>>,
+    state: web::Data<AppState>,
     identity: AuthUser,
     token_name: web::Path<String>,
 ) -> Result<impl Responder, Error> {

@@ -17,22 +17,26 @@ use crate::user::User;
 
 const MAX_FID_RETRIES: u32 = 20;
 
-#[derive(Debug)]
-pub struct AppState<'templates> {
+pub struct AppState {
     pub(crate) db: DatabaseConnection, // NOTE: closed on drop
     pub(crate) config: Config,
     pub(crate) csprng: Mutex<rand::rngs::StdRng>,
-    pub(crate) templating: minijinja::Environment<'templates>,
+    template_reloader: minijinja_autoreload::AutoReloader,
 }
 
-impl AppState<'_> {
+impl AppState {
     pub async fn new(config: &Config) -> Result<Self, Error> {
         let csprng = rand::rngs::StdRng::from_os_rng();
 
         let mut templates_path = config.service.data_dir.clone();
         templates_path.push("templates");
-        let mut templates = minijinja::Environment::new();
-        templates.set_loader(minijinja::path_loader(&templates_path));
+
+        let template_reloader = minijinja_autoreload::AutoReloader::new(move |notifier| {
+            let mut env = minijinja::Environment::new();
+            env.set_loader(minijinja::path_loader(&templates_path));
+            notifier.watch_path(&templates_path, true);
+            Ok(env)
+        });
 
         let db_path = std::path::PathBuf::from(&config.service.db_sqlite);
         if let Some(parent) = db_path.parent() {
@@ -46,7 +50,7 @@ impl AppState<'_> {
             db,
             config: config.clone(),
             csprng: Mutex::new(csprng),
-            templating: templates,
+            template_reloader,
         };
         a.run_migrations_if_needed().await?;
 
@@ -89,8 +93,9 @@ impl AppState<'_> {
         &self.config
     }
 
-    pub fn templating(&self) -> &minijinja::Environment {
-        &self.templating
+    pub fn templating<'a>(&'a self) -> Result<minijinja_autoreload::EnvironmentGuard<'a>, Error> {
+        // PERF: disable template reloading in release build
+        Ok(self.template_reloader.acquire_env()?)
     }
 
     pub fn storage_dir(&self) -> PathBuf {
@@ -290,7 +295,7 @@ impl AppState<'_> {
 
 pub(crate) mod validators {
     use super::*;
-    impl AppState<'_> {
+    impl AppState {
         pub(crate) fn validate_make_testfile(&self) -> Result<(), Error> {
             debug!("validate_make_testfile");
             const TESTDATA: &[u8] = &[19, 13, 124, 25, 16, 2, 16, 37, 38, 84, 38, 92, 125, 15];
