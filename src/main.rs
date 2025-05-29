@@ -10,7 +10,6 @@ use actix_web::http::KeepAlive;
 use actix_web::middleware::Logger;
 use actix_web::{App, HttpServer, web};
 use actix_web_static_files::ResourceFiles;
-use env_logger::Env;
 use garbage_collector::garbage_collector;
 use log::trace;
 

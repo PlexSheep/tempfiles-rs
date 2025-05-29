@@ -14,7 +14,7 @@ use rand::prelude::*;
 use sea_orm::EntityTrait;
 use serde::{Deserialize, Serialize, Serializer};
 
-use crate::db::types::{RawFileID, RawUserID};
+use crate::db::types::RawFileID;
 use crate::errors::Error;
 use crate::user::User;
 
