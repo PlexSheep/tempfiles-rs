@@ -39,6 +39,7 @@ pub struct ServiceConfig {
     pub bind: SocketAddr,
     pub base_url: String,
     pub data_dir: std::path::PathBuf,
+    pub clear_interval: u16,
 }
 
 impl Config {

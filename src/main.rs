@@ -11,6 +11,7 @@ use actix_web::middleware::Logger;
 use actix_web::{App, HttpServer, web};
 use actix_web_static_files::ResourceFiles;
 use env_logger::Env;
+use garbage_collector::garbage_collector;
 use log::trace;
 
 mod api_v1;
@@ -19,6 +20,7 @@ mod config;
 mod db;
 mod errors;
 mod files;
+mod garbage_collector;
 mod state;
 mod urls;
 mod user;
@@ -41,6 +43,9 @@ async fn main() -> Result<(), Error> {
 
     let inner_state = AppState::new(&config).await?;
     let app_state = web::Data::new(inner_state);
+    let app_state_gc = app_state.clone();
+
+    tokio::spawn(async move { garbage_collector(app_state_gc).await });
 
     HttpServer::new(move || {
         let generated_static_files = generate();
@@ -71,6 +76,7 @@ async fn main() -> Result<(), Error> {
             .service(frontend_view_get_logout)
             .service(frontend_view_post_register)
             .service(frontend_view_get_settings)
+            .service(frontend_view_get_about)
             .service(
                 web::scope("/api/v1")
                     .service(api_view_get_file_fid_name)

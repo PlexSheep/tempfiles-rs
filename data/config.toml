@@ -8,7 +8,7 @@ default_expiration_days = 60              # files are deleted after 60 days
 delete_old_files = true                   # will delete old files if the used storage would be over max_storage
 
 [accounts]
-allow_anon = false          # allow anonymous uploads
+allow_anon = false         # allow anonymous uploads
 allow_registration = false # allow account registration without invite
 
 
@@ -16,7 +16,8 @@ allow_registration = false # allow account registration without invite
 secret = "7UznN0NBPegSCetoXvETJJvW9Ewk8iGw9D2ortfy"
 rate_limit_window_ms = 300000                       # 5 min
 rate_limit_max_uploads = 20                         # 20 uploads per window max
-db_sqlite = "./data/db.sqlite"           # path to the database
+db_sqlite = "./data/db.sqlite"                      # path to the database
 bind = "0.0.0.0:8000"
 base_url = "http://localhost:8000"
-data_dir = "./data" # internal data like templates
+data_dir = "./data"                                 # internal data like templates
+clear_interval = 30                                 # Clear expired entities every n minutes

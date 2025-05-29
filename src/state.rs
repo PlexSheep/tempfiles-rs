@@ -259,6 +259,13 @@ impl AppState<'_> {
 
         Ok(())
     }
+    pub fn garbage_collection_duraiton(&self) -> tokio::time::Duration {
+        tokio::time::Duration::from_secs(60 * self.config().service.clear_interval as u64)
+    }
+
+    pub async fn files(&self) -> Vec<(FileInfos)> {
+        todo!()
+    }
 }
 
 pub(crate) mod validators {
