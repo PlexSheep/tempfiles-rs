@@ -17,6 +17,8 @@ use sea_orm::QueryFilter as _;
 use sea_orm_migration::seaql_migrations::ActiveModel;
 use serde::Deserialize;
 use serde::Serialize;
+use serde_repr::Deserialize_repr;
+use serde_repr::Serialize_repr;
 use validator::Validate;
 
 use crate::db;
@@ -74,6 +76,30 @@ pub enum UserKind {
     #[default]
     Standard,
     Admin,
+}
+
+#[derive(Debug, Deserialize_repr, Serialize_repr, Clone)]
+#[repr(u16)]
+pub enum CredentialDuration {
+    D30 = 30,
+    D90 = 90,
+    D345 = 345,
+}
+
+#[derive(Debug, Deserialize, Clone)]
+pub struct ApiV1TokenRequest {
+    #[serde(rename = "tokenDuration")]
+    pub requested_duration: CredentialDuration,
+}
+
+impl From<CredentialDuration> for chrono::TimeDelta {
+    fn from(value: CredentialDuration) -> Self {
+        chrono::TimeDelta::days(match value {
+            CredentialDuration::D30 => 30,
+            CredentialDuration::D90 => 90,
+            CredentialDuration::D345 => 345,
+        })
+    }
 }
 
 impl UserLoginData {

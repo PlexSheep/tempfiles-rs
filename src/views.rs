@@ -194,7 +194,7 @@ pub async fn frontend_view_get_settings(
 
     let content: String = state
         .templating()
-        .get_template("login.html")?
+        .get_template("settings.html")?
         .render(context!(bctx => BasicContext::build(&state, Some(user)).await?))?;
     Ok(HttpResponse::Ok().body(content))
 }

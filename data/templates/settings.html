@@ -1,0 +1,23 @@
+{% extends "base.html" %} {% block main %}
+<h2>Authentification</h2>
+<form method="POST" id="settingsGenerateToken" enctype="application/x-www-form-urlencoded">
+	<div class="mb-3">
+		<label for="tokenOutput" class="form-label">Generated Token</label>
+		<input type="text" id="tokenOutput" class="form-control" placeholder="No Token Generated So Far" disabled>
+	</div>
+	<div class="mb-3">
+		<label for="tokenDuration" class="form-label">Select Token Duration</label>
+		<select id="tokenDuration" class="form-select">
+			<option value="30">30 Days</option>
+			<option value="90">90 Days</option>
+			<option value="365">365 Days</option>
+		</select>
+	</div>
+	<div class="mb-3">
+		<input type="submit" class="form-control">
+	</div>
+</form>
+<script>
+	{% include "js/settings.js" %}
+</script>
+{% endblock %}

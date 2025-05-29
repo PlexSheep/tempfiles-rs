@@ -7,11 +7,12 @@ use actix_web::web::Redirect;
 use actix_web::{HttpResponse, Responder, get, post, web};
 use log::{debug, info, warn};
 use serde::{Serialize, Serializer};
+use serde_json::json;
 
 use crate::errors::Error;
 use crate::files::{FileID, FileUpload};
 use crate::state::AppState;
-use crate::user::{User, get_user_from_identity};
+use crate::user::{ApiV1TokenRequest, User, get_user_from_identity};
 
 #[derive(Debug, Serialize)]
 pub struct ErrorResponse {
@@ -94,6 +95,29 @@ pub async fn api_view_get_file_fid_name_info(
     let fid = FileID::from_str(&urlargs.0)?;
     let name = urlargs.1;
     Ok(HttpResponse::Ok().json(state.make_file_infos(fid, &name).await?))
+}
+
+#[post("/auth/token")]
+pub async fn api_view_post_auth_token(
+    state: web::Data<AppState<'_>>,
+    web::Form(token_request): web::Form<ApiV1TokenRequest>,
+    identity: Identity,
+) -> Result<impl Responder, Error> {
+    let user: User = get_user_from_identity(&identity, state.db()).await?;
+
+    info!("Creating new token for user: {}", user.email());
+
+    let duration: chrono::TimeDelta = token_request.requested_duration.into();
+    let expiration = chrono::Utc::now().naive_utc() + duration;
+
+    let tok = user
+        .create_api_v1_token(expiration, &mut state.csprng().await, state.db())
+        .await?;
+
+    Ok(HttpResponse::Ok().json(json!({
+        "token": &tok.token,
+        "expiration": expiration
+    })))
 }
 
 pub fn api_view_unauthorized() -> HttpResponse<BoxBody> {
