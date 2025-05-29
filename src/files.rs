@@ -8,6 +8,7 @@ use actix_multipart::form::{MultipartForm, tempfile::TempFile};
 use actix_web::http::header::ContentType;
 use chrono::{NaiveDateTime, Utc};
 use derive_builder::Builder;
+use log::{debug, warn};
 use rand::distr::StandardUniform;
 use rand::prelude::*;
 use sea_orm::EntityTrait;
@@ -95,11 +96,16 @@ impl FileInfosBuilder {
         }
         let file_meta = file_entry.unwrap();
 
-        let user = match User::get_by_id(file_meta.id, db).await {
+        let user = match User::get_by_id(file_meta.user_id, db).await {
             Ok(user) => Some(user),
-            Err(Error::UserDoesNotExist) => None,
+            Err(Error::UserDoesNotExist) => {
+                warn!("Uploader with unknown user id: {}", file_meta.user_id);
+                None
+            }
             Err(other) => return Err(other),
         };
+
+        debug!("User for fent: {user:?}");
 
         self.uploader(user);
         self.time_expiration(file_meta.expiration_time);
@@ -165,6 +171,7 @@ impl From<FileID> for i32 {
 }
 
 fn ser_uploader<S: Serializer>(user: &Option<User>, s: S) -> Result<S::Ok, S::Error> {
+    debug!("serializing user for file entry: {user:?}");
     match user {
         None => "Anonymous".serialize(s),
         Some(user) => user.username().serialize(s),

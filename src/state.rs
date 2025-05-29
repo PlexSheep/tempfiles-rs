@@ -5,13 +5,11 @@ use std::str::FromStr;
 use log::{debug, error, info, warn};
 use migrations::{MigratorTrait, SchemaManager};
 use rand::{Rng, SeedableRng};
-use sea_orm::{Database, DatabaseConnection, EntityTrait as _, ModelTrait};
+use sea_orm::{Database, DatabaseConnection, EntityTrait as _};
 use tokio::sync::Mutex;
 
 use crate::config::Config;
 use crate::db::schema;
-use crate::db::schema::file::Entity as FileE;
-use crate::db::schema::file::Model as FileM;
 use crate::errors::Error;
 use crate::files::{FileID, FileInfos};
 use crate::user::User;
@@ -156,22 +154,13 @@ impl AppState<'_> {
         Ok(p)
     }
 
-    pub async fn make_file_infos(
-        &self,
-        fid: FileID,
-        name: &str,
-        db: &DatabaseConnection,
-    ) -> Result<FileInfos, Error> {
+    pub async fn make_file_infos(&self, fid: FileID, name: &str) -> Result<FileInfos, Error> {
         let path = &self.upload_datafile_for_fid(fid, name, false)?;
         let flags = magic::cookie::Flags::MIME_TYPE | magic::cookie::Flags::MIME_ENCODING;
         let cookie = magic::Cookie::open(flags)?;
         let cookie = cookie
             .load(&magic::cookie::DatabasePaths::default())
             .expect("could not load database for libmagic file type detection");
-        let file_db_entry = match FileE::find_by_id(fid).one(db).await? {
-            Some(fent) => fent,
-            None => return Err(Error::FileDBEntryNotFound),
-        };
 
         Ok(FileInfos::builder()
             .fid(fid)
@@ -185,8 +174,6 @@ impl AppState<'_> {
                     .to_string(),
             )
             .filemeta(path)?
-            .time_expiration(file_db_entry.expiration_time)
-            .uploader(User::get_by_id(file_db_entry.user_id, db).await.ok())
             .get_db_info(self.db(), fid)
             .await
             .inspect_err(|e| error!("Could not get DB info for file with id {fid}: {e}"))?
