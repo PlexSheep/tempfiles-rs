@@ -5,7 +5,6 @@ use actix_identity::Identity;
 use argon2::PasswordHash;
 use argon2::PasswordHasher;
 use argon2::password_hash::SaltString;
-use chrono::NaiveDateTime;
 use log::debug;
 use log::error;
 use log::warn;
