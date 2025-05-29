@@ -23,7 +23,7 @@ async function sendData() {
 
 			return;
 		}
-		if (response.ok) {
+		if (!response.ok) {
 			throw Error("Could not upload file");
 		}
 
