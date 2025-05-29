@@ -17,7 +17,7 @@ impl MigrationTrait for Migration {
                             .unique_key()
                             .primary_key(),
                     )
-                    .col(schema::string(UserToken::Token).not_null().unique_key())
+                    .col(schema::string(UserToken::TokenHash).not_null().unique_key())
                     .col(schema::integer(UserToken::UserId).not_null())
                     .col(schema::date_time(UserToken::CreationTime).not_null())
                     .col(schema::date_time(UserToken::ExpirationTime).not_null())
@@ -36,7 +36,7 @@ impl MigrationTrait for Migration {
 #[derive(DeriveIden)]
 enum UserToken {
     Table,
-    Token,
+    TokenHash,
     UserId,
     Name,
     ExpirationTime,

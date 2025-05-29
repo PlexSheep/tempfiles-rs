@@ -2,7 +2,6 @@ use std::ops::Deref;
 use std::str::FromStr;
 
 use actix_multipart::form::MultipartForm;
-use actix_web::body::BoxBody;
 use actix_web::web::Redirect;
 use actix_web::{HttpResponse, Responder, get, post, web};
 use log::{debug, info, warn};
@@ -108,16 +107,14 @@ pub async fn api_view_post_auth_token(
 
     info!("Creating new token for user: {}", user.email());
 
-    let duration: chrono::TimeDelta = token_request.requested_duration.into();
-    let expiration = chrono::Utc::now().naive_utc() + duration;
-
-    let tok = user
-        .create_api_v1_token(expiration, &mut state.csprng().await, state.db())
+    let (token, token_data) = user
+        .create_api_v1_token(token_request, &mut state.csprng().await, state.db())
         .await?;
 
     Ok(HttpResponse::Ok().json(json!({
-        "token": &tok.token,
-        "expiration": expiration
+        "token": &token,
+        "time_expiration": &token_data.expiration_time,
+        "time_creation": &token_data.creation_time
     })))
 }
 
@@ -132,12 +129,6 @@ pub async fn api_view_get_auth_token(identity: AuthUser) -> Result<impl Responde
         "id": user.id(),
         "userKind": user.kind()?,
     })))
-}
-
-pub fn api_view_unauthorized() -> HttpResponse<BoxBody> {
-    HttpResponse::Unauthorized().json(ErrorResponse {
-        error: Error::Unauthorized,
-    })
 }
 
 fn ser_error<S>(err: &crate::Error, s: S) -> Result<S::Ok, S::Error>

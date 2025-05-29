@@ -4,6 +4,7 @@ use std::str::FromStr;
 use actix_identity::Identity;
 use argon2::PasswordHash;
 use argon2::PasswordHasher;
+use argon2::password_hash::SaltString;
 use chrono::NaiveDateTime;
 use log::debug;
 use log::error;
@@ -86,10 +87,20 @@ pub enum CredentialDuration {
     D365 = 365,
 }
 
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Deserialize, Clone, Validate)]
 pub struct ApiV1TokenRequest {
     #[serde(rename = "tokenDuration")]
     pub requested_duration: CredentialDuration,
+    #[serde(rename = "tokenName")]
+    #[validate(length(min = 5, max = 40))]
+    pub token_name: String,
+}
+
+impl ApiV1TokenRequest {
+    pub fn expiration_timestamp(&self) -> chrono::NaiveDateTime {
+        let duration: chrono::TimeDelta = self.requested_duration.clone().into();
+        chrono::Utc::now().naive_utc() + duration
+    }
 }
 
 impl FromStr for UserKind {
@@ -136,12 +147,19 @@ impl UserLoginData {
                 for token_model in tokens {
                     if token_model.expiration_time < now {
                         #[cfg(debug_assertions)] // this should likely not be printed in production
-                        warn!("APIV1 Token is expired: {}", token_model.token);
+                        warn!("APIV1 Token is expired: {}", token_model.token_hash);
                         continue;
                     }
 
+                    let hash_of_real_token = User::load_password_hash(&token_model.token_hash)?;
+                    let salt = match hash_of_real_token.salt {
+                        Some(s) => s,
+                        None => return Err(Error::NoSaltStoredForToken(token_model.name.clone())),
+                    };
+                    let hash_of_request_token = User::hash_password(&login_data.token, salt)?;
+
                     // stored token is valid
-                    if token_model.token == login_data.token {
+                    if hash_of_real_token == hash_of_request_token {
                         let user = token_model.find_related(UserEntity).one(db).await?;
                         return Ok(user);
                     }
@@ -301,12 +319,12 @@ impl User {
         for token_model in tokens {
             if token_model.expiration_time < now {
                 #[cfg(debug_assertions)] // this should likely not be printed in production
-                warn!("APIV1 Token is expired: {}", token_model.token);
+                warn!("APIV1 Token is expired: {}", token_model.token_hash);
                 continue;
             }
 
             // stored token is valid
-            if token_model.token == login_data.token {
+            if token_model.token_hash == login_data.token {
                 authenticated = true;
                 break;
             }
@@ -322,25 +340,31 @@ impl User {
 
     pub async fn create_api_v1_token(
         &self,
-        expiration_time: NaiveDateTime,
+        request: ApiV1TokenRequest,
         rng: &mut impl rand::CryptoRng,
         db: &DatabaseConnection,
-    ) -> Result<UserTokenM, Error> {
+    ) -> Result<(String, UserTokenM), Error> {
+        let expiration = request.expiration_timestamp();
+
         let token_secret: String =
             rand::distr::Alphanumeric.sample_string(rng, APIV1_TOKEN_SECRET_LEN);
         let token = format!("{APIV1_TOKEN_PREFIX}{token_secret}");
         let now = chrono::Utc::now().naive_utc();
 
+        let saltstr = SaltString::generate(&mut argon2::password_hash::rand_core::OsRng);
+        let token_hash = Self::hash_password(&token, saltstr.as_salt())?;
+
         let token_model = user_token::ActiveModel {
-            token: sea_orm::ActiveValue::Set(token),
+            token_hash: sea_orm::ActiveValue::Set(token_hash.to_string()),
+            name: sea_orm::ActiveValue::Set(request.token_name),
             creation_time: sea_orm::ActiveValue::Set(now),
-            expiration_time: sea_orm::ActiveValue::Set(expiration_time),
+            expiration_time: sea_orm::ActiveValue::Set(expiration),
             user_id: sea_orm::ActiveValue::Set(self.id()),
         }
         .insert(db)
         .await?;
 
-        Ok(token_model)
+        Ok((token, token_model))
     }
 }
 

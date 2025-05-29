@@ -64,6 +64,8 @@ pub enum Error {
     Unauthorized,
     #[error("Unknown user kind: {0}")]
     UnknownUserKind(String),
+    #[error("DB has no salt for a stored token: {0}")]
+    NoSaltStoredForToken(String),
 }
 
 impl actix_web::error::ResponseError for Error {
