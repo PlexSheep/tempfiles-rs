@@ -99,7 +99,12 @@ async fn main() -> Result<(), Error> {
 }
 
 fn setup_logging(_logfile: Option<PathBuf>) {
-    env_logger::init_from_env(Env::default().default_filter_or("debug"));
+    env_logger::builder()
+        .filter(Some(env!("CARGO_PKG_NAME")), log::LevelFilter::Trace)
+        .filter(Some("sqlx"), log::LevelFilter::Warn)
+        .filter(None, log::LevelFilter::Debug)
+        .try_init()
+        .expect("could not set up logging");
 
     trace!("set up the logger");
 }
