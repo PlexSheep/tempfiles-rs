@@ -194,6 +194,8 @@ impl User {
     pub async fn login(login_data: UserLoginData, db: &DatabaseConnection) -> Result<Self, Error> {
         login_data.validate()?;
 
+        // NOTE: already does auth for API, since that is the only way
+        // to get the user for the api token
         let user = login_data.find_user_with_db(db).await?;
 
         if user.is_none() {
@@ -322,8 +324,15 @@ impl User {
                 continue;
             }
 
+            let hash_of_real_token = User::load_password_hash(&token_model.token_hash)?;
+            let salt = match hash_of_real_token.salt {
+                Some(s) => s,
+                None => return Err(Error::NoSaltStoredForToken(token_model.name.clone())),
+            };
+            let hash_of_request_token = User::hash_password(&login_data.token, salt)?;
+
             // stored token is valid
-            if token_model.token_hash == login_data.token {
+            if hash_of_real_token == hash_of_request_token {
                 authenticated = true;
                 break;
             }
@@ -353,6 +362,14 @@ impl User {
 
         let saltstr = SaltString::generate(&mut argon2::password_hash::rand_core::OsRng);
         let token_hash = Self::hash_password(&token, saltstr.as_salt())?;
+        if self
+            .tokens(db)
+            .await?
+            .iter()
+            .any(|t| t.name == request.token_name)
+        {
+            return Err(Error::TokenWithThatNameExists(request.token_name.clone()));
+        }
 
         let token_model = user_token::ActiveModel {
             token_hash: sea_orm::ActiveValue::Set(token_hash.to_string()),

@@ -66,12 +66,16 @@ pub enum Error {
     UnknownUserKind(String),
     #[error("DB has no salt for a stored token: {0}")]
     NoSaltStoredForToken(String),
+    #[error("A token with this name already exists: {0}")]
+    TokenWithThatNameExists(String),
 }
 
 impl actix_web::error::ResponseError for Error {
     fn status_code(&self) -> actix_web::http::StatusCode {
         match self {
             Self::FileNotFound => actix_web::http::StatusCode::NOT_FOUND,
+            Self::Unauthorized | Self::WrongPassword => actix_web::http::StatusCode::UNAUTHORIZED,
+            Self::TokenWithThatNameExists(_) => actix_web::http::StatusCode::CONFLICT,
             Self::BadFileID(_) => actix_web::http::StatusCode::BAD_REQUEST,
             _ => actix_web::http::StatusCode::INTERNAL_SERVER_ERROR,
         }

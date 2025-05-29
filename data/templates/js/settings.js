@@ -31,6 +31,10 @@ document.addEventListener('DOMContentLoaded', function() {
 			});
 
 			if (!response.ok) {
+				if (response.status == 409) {
+					tokenOutput.value = 'Another Token already has this name. Use a different name.';
+					return;
+				}
 				throw new Error(`HTTP error! status: ${response.status}`);
 			}
 
