@@ -366,6 +366,10 @@ impl User {
 
         Ok((token, token_model))
     }
+
+    pub async fn tokens(&self, db: &DatabaseConnection) -> Result<Vec<UserTokenM>, Error> {
+        Ok(self.inner.find_related(UserTokenE).all(db).await?)
+    }
 }
 
 impl Display for UserKind {

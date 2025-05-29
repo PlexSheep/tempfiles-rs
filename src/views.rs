@@ -9,6 +9,7 @@ use minijinja::context;
 use serde::Serialize;
 
 use crate::auth::{AuthUser, MaybeAuthUser};
+use crate::db::schema::user_token::Model as UserTokenM;
 use crate::errors::Error;
 use crate::files::FileID;
 use crate::state::AppState;
@@ -193,11 +194,11 @@ pub async fn frontend_view_get_settings(
     identity: AuthUser,
 ) -> Result<impl Responder, Error> {
     let user = identity.user();
+    let tokens: Vec<UserTokenM> = user.tokens(state.db()).await?;
 
-    let content: String = state
-        .templating()
-        .get_template("settings.html")?
-        .render(context!(bctx => BasicContext::build(&state, Some(user)).await?))?;
+    let content: String = state.templating().get_template("settings.html")?.render(
+        context!(bctx => BasicContext::build(&state, Some(user)).await?, tokens => tokens),
+    )?;
     Ok(HttpResponse::Ok().body(content))
 }
 
