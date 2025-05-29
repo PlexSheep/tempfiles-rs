@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block selectedNavPage %}about{% endblock %}
+{% block main %}
+<div class="container-xl col-xxl-8 py-5 px-5">
+	<div class="row flex-lg-row-reverse align-items-center g-5 py-5">
+		<div class="col-10 col-sm-8 col-lg-6">
+			<img src="/static/img/logo.svg" class="d-block mx-lg-auto img-fluid" alt="Bootstrap Themes" width="700"
+				height="500" loading="lazy" />
+		</div>
+		<div class="col-lg-6 text-center">
+			<h1 class="display-3 fw-bold text-body-emphasis lh-1 mb-3">
+				tempfiles-rs <small class="text-body-secondary fs-6">{{ bctx.version}}</small>
+			</h1>
+			<ul class="list-group list-group-flush">
+				<li class="list-group-item">{{ bctx.pkgname }} v{{ bctx.version }}</li>
+				<li class="list-group-item" style="white-space: pre-wrap;">{{ bctx.copyright }}</li>
+				<li class="list-group-item"><a href="{{ bctx.homepage }}">Homepage and Source Code</a></li>
+			</ul>
+		</div>
+	</div>
+</div>
+{% endblock %}

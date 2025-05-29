@@ -5,6 +5,7 @@ use actix_identity::Identity;
 use actix_web::web::Redirect;
 use actix_web::{HttpMessage, HttpRequest, HttpResponse, Responder, get, post, web};
 use argon2::password_hash::SaltString;
+use chrono::Datelike;
 use minijinja::context;
 use serde::Serialize;
 
@@ -19,6 +20,11 @@ use crate::user::{self, User, UserLoginData, UserLoginDataWeb, UserRegisterData}
 pub struct BasicContext {
     user: Option<user::User>,
     base_url: String,
+    version: String,
+    pkgname: String,
+    authors: String,
+    homepage: String,
+    copyright: String,
 }
 
 impl BasicContext {
@@ -26,9 +32,19 @@ impl BasicContext {
         state: &web::Data<AppState<'_>>,
         user: Option<user::User>,
     ) -> Result<Self, Error> {
+        let authors = env!("CARGO_PKG_AUTHORS").to_string();
+        let now = chrono::Utc::now();
         Ok(BasicContext {
             user,
             base_url: state.config().service.base_url.clone(),
+            version: env!("CARGO_PKG_VERSION").to_string(),
+            pkgname: env!("CARGO_PKG_NAME").to_string(),
+            homepage: env!("CARGO_PKG_HOMEPAGE").to_string(),
+            copyright: format!(
+                "Copyright (c) {} {authors}.\nSome Rights Reserved.",
+                now.year()
+            ),
+            authors,
         })
     }
 }
@@ -60,6 +76,19 @@ pub async fn frontend_view_post_index(
     identity: MaybeAuthUser,
 ) -> Result<impl Responder, Error> {
     frontend_view_inner_index(state, identity).await
+}
+
+#[get("/about")]
+pub async fn frontend_view_get_about(
+    state: web::Data<AppState<'_>>,
+    identity: MaybeAuthUser,
+) -> Result<impl Responder, Error> {
+    let user: Option<User> = identity.user();
+    let content: String = state
+        .templating()
+        .get_template("about.html")?
+        .render(context!(bctx => BasicContext::build(&state, user).await?))?;
+    Ok(HttpResponse::Ok().body(content))
 }
 
 #[get("/file/{fid}")]
