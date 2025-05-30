@@ -11,9 +11,9 @@ impl MigrationTrait for Migration {
                 Table::create()
                     .table(File::Table)
                     .if_not_exists()
-                    .col(schema::pk_auto(File::Id).not_null().unique_key())
-                    .col(schema::integer(File::UserId).null())
-                    .col(schema::date_time(File::ExpirationTime).not_null())
+                    .col(schema::pk_auto(File::Id))
+                    .col(ColumnDef::new(File::UserId).integer().null().take())
+                    .col(schema::date_time(File::ExpirationTime))
                     .to_owned(),
             )
             .await
