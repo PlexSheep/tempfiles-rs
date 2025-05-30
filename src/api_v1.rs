@@ -23,7 +23,6 @@ pub struct ErrorResponse {
 
 #[post("/file")]
 pub async fn api_view_post_file(
-    req: HttpRequest,
     state: web::Data<AppState>,
     MultipartForm(file_upload): MultipartForm<FileUpload>,
     identity: MaybeAuthUser,
@@ -31,11 +30,16 @@ pub async fn api_view_post_file(
     let user = identity.user();
     let max_size = state.max_upload_size(user.as_ref())?;
 
+    if user.is_none() && !state.config().accounts.allow_anon {
+        return Ok(HttpResponse::Unauthorized()
+            .json(json!({"error": format!("Only logged in users can upload to this instance")})));
+    }
+
     info!("Uploading File");
     debug!("file upload data: {file_upload:?}");
 
     if file_upload.file.size as u64 > max_size {
-        warn!("content-length sizecheck succeeded but actual file size is too large");
+        warn!("Uploaded file is too large: {}", file_upload.file.size);
         return Ok(HttpResponse::PayloadTooLarge()
             .json(json!({"error": format!("Uploaded file is too large: {max_size}")})));
     }

@@ -27,6 +27,7 @@ pub struct FilesConfig {
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct AccountsConfig {
+    /// Allow Anonymous Uploads
     pub allow_anon: bool,
     pub allow_registration: bool,
 }
