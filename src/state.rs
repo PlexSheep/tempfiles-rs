@@ -246,7 +246,7 @@ impl AppState {
     pub async fn create_file_db_entry(
         &self,
         fid: FileID,
-        user: &User,
+        user: Option<&User>,
         db: &DatabaseConnection,
     ) -> Result<(), Error> {
         if let Some(ent) = self.get_file_db_entry(fid, db).await? {
@@ -256,9 +256,13 @@ impl AppState {
 
         let expiration = chrono::Utc::now().naive_utc() + self.get_expiration_offset();
 
+        let user_id = match user {
+            Some(u) => sea_orm::ActiveValue::Set(u.id()),
+            None => sea_orm::ActiveValue::NotSet,
+        };
         let file_values = schema::file::ActiveModel {
             id: sea_orm::ActiveValue::Set(fid.inner()),
-            user_id: sea_orm::ActiveValue::Set(user.id()),
+            user_id,
             expiration_time: sea_orm::ActiveValue::Set(expiration),
         };
 
@@ -290,6 +294,13 @@ impl AppState {
 
     pub async fn files(&self) -> Result<Vec<FileM>, Error> {
         Ok(FileE::find().all(self.db()).await?)
+    }
+
+    pub fn max_upload_size(&self, user: Option<&User>) -> Result<u64, Error> {
+        Ok(match user {
+            None => self.config().files.max_size_kb_anon * 1024,
+            Some(_) => self.config().files.max_size_kb_users * 1024,
+        })
     }
 }
 
