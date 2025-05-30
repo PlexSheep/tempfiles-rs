@@ -60,7 +60,7 @@
 				<div class="px-3">
 					<a href="#" onclick="toggleDarkMode()"
 						class="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700">
-						<i class="bi bi-sun-fill text-light" style="font-size: 2rem;"></i>
+						<i id="darkModeIcon" class="bi bi-sun-fill text-light" style="font-size: 2rem;"></i>
 					</a>
 				</div>
 				{% if not bctx.user %}
@@ -82,7 +82,7 @@
 					</a>
 					<ul class="dropdown-menu text-small" style="">
 						<li>
-							<h6 class="dropdown-header">{{ bctx.user.inner.user_name }}</h6>
+							<h6 class="dropdown-header">{{ bctx.user.inner.user_name }} ({{ bctx.user.inner.kind }})</h6>
 						</li>
 						<li>
 							<hr class="dropdown-divider" />
@@ -121,14 +121,19 @@
 			})
 		})
 		function toggleDarkMode() {
+			const icon = document.getElementById("darkModeIcon");
 			if (localStorage.theme === "light") {
 				console.log("setting dark theme");
 				localStorage.theme = "dark";
 				document.documentElement.setAttribute("data-bs-theme", "dark")
+				icon.classList.add("bi-sun-fill");
+				icon.classList.remove("bi-sun");
 			} else if (localStorage.theme === "dark") {
 				console.log("setting light theme");
 				localStorage.theme = "light";
 				document.documentElement.setAttribute("data-bs-theme", "")
+				icon.classList.add("bi-sun");
+				icon.classList.remove("bi-sun-fill");
 			} else {
 				localStorage.theme = "light";
 				toggleDarkMode();
