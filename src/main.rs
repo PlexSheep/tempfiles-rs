@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 
 use actix_identity::IdentityMiddleware;
+use actix_multipart::form::MultipartFormConfig;
 use actix_session::SessionMiddleware;
 use actix_session::config::PersistentSession;
 use actix_session::storage::CookieSessionStore;
@@ -8,6 +9,7 @@ use actix_web::cookie::Key;
 use actix_web::cookie::time::Duration;
 use actix_web::http::KeepAlive;
 use actix_web::middleware::Logger;
+use actix_web::web::{FormConfig, PayloadConfig};
 use actix_web::{App, HttpServer, web};
 use actix_web_static_files::ResourceFiles;
 use garbage_collector::garbage_collector;
@@ -43,6 +45,7 @@ async fn main() -> Result<(), Error> {
     let inner_state = AppState::new(&config).await?;
     let app_state = web::Data::new(inner_state);
     let app_state_gc = app_state.clone();
+    let largest_possible_upload = config.largest_possible_upload();
 
     tokio::spawn(async move { garbage_collector(app_state_gc).await });
 
@@ -53,6 +56,9 @@ async fn main() -> Result<(), Error> {
         App::new()
             .configure(actix_config_global)
             .app_data(app_state.clone())
+            .app_data(PayloadConfig::new(largest_possible_upload))
+            .app_data(FormConfig::default().limit(largest_possible_upload))
+            .app_data(MultipartFormConfig::default().total_limit(largest_possible_upload))
             .wrap(Logger::default())
             .wrap(IdentityMiddleware::default())
             .wrap(
@@ -98,8 +104,11 @@ async fn main() -> Result<(), Error> {
 }
 
 fn setup_logging(_logfile: Option<PathBuf>) {
+    let ll_self = log::LevelFilter::Trace;
     env_logger::builder()
-        .filter(Some(env!("CARGO_PKG_NAME")), log::LevelFilter::Trace)
+        .filter(Some(env!("CARGO_PKG_NAME")), ll_self)
+        .filter(Some(env!("CARGO_BIN_NAME")), ll_self)
+        .filter(Some("tempfiles_rs"), ll_self)
         .filter(Some("sqlx"), log::LevelFilter::Warn)
         .filter(None, log::LevelFilter::Debug)
         .try_init()

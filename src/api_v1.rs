@@ -34,23 +34,6 @@ pub async fn api_view_post_file(
     info!("Uploading File");
     debug!("file upload data: {file_upload:?}");
 
-    if let Some(cl) = req.headers().get("content-length") {
-        let content_length = match cl.to_str().unwrap_or("kacke").parse::<u64>() {
-            Ok(size) => size,
-            Err(e) => {
-                warn!("Could not read content length header: {e}");
-                return Err(Error::BadHeader("content-length".to_string()));
-            }
-        };
-        if content_length > max_size {
-            return Ok(HttpResponse::PayloadTooLarge().json(
-                json!({"error": format!("Content Length larger than max size of {max_size}")}),
-            ));
-        }
-    } else {
-        return Err(Error::MissingHeader("content-length".to_string()));
-    }
-
     if file_upload.file.size as u64 > max_size {
         warn!("content-length sizecheck succeeded but actual file size is too large");
         return Ok(HttpResponse::PayloadTooLarge()

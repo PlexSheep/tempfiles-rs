@@ -2,6 +2,7 @@ use std::net::SocketAddr;
 use std::path::Path;
 
 use actix_web::web;
+use log::trace;
 use serde::Deserialize;
 
 use crate::errors::ConfigError;
@@ -53,8 +54,17 @@ impl Config {
         let content = std::fs::read_to_string(path)?;
         Ok(toml::from_str(&content)?)
     }
+
+    pub fn largest_possible_upload(&self) -> usize {
+        let t = 1024
+            * if self.files.max_size_kb_anon < self.files.max_size_kb_users {
+                self.files.max_size_kb_users as usize
+            } else {
+                self.files.max_size_kb_anon as usize
+            };
+        trace!("largest_possible_upload = {t} Bytes");
+        t
+    }
 }
 
-pub fn actix_config_global(_cfg: &mut web::ServiceConfig) {
-    // todo!()
-}
+pub fn actix_config_global(_cfg: &mut web::ServiceConfig) {}
