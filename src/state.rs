@@ -257,8 +257,8 @@ impl AppState {
         let expiration = chrono::Utc::now().naive_utc() + self.get_expiration_offset();
 
         let user_id = match user {
-            Some(u) => sea_orm::ActiveValue::Set(u.id()),
-            None => sea_orm::ActiveValue::NotSet,
+            Some(u) => sea_orm::ActiveValue::Set(Some(u.id())),
+            None => sea_orm::ActiveValue::Set(None),
         };
         let file_values = schema::file::ActiveModel {
             id: sea_orm::ActiveValue::Set(fid.inner()),

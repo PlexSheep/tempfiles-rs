@@ -10,7 +10,7 @@ use crate::db::types::RawUserID;
 pub struct Model {
     #[sea_orm(primary_key, unique)]
     pub id: RawUserID,
-    pub user_id: RawUserID,
+    pub user_id: Option<RawUserID>,
     pub expiration_time: DateTime,
 }
 

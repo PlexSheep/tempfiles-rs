@@ -97,13 +97,16 @@ impl FileInfosBuilder {
         }
         let file_meta = file_entry.unwrap();
 
-        let user = match User::get_by_id(file_meta.user_id, db).await {
-            Ok(user) => Some(user),
-            Err(Error::UserDoesNotExist) => {
-                warn!("Uploader with unknown user id: {}", file_meta.user_id);
-                None
-            }
-            Err(other) => return Err(other),
+        let user = match file_meta.user_id {
+            Some(uid) => match User::get_by_id(uid, db).await {
+                Ok(user) => Some(user),
+                Err(Error::UserDoesNotExist) => {
+                    warn!("Uploader with unknown user id: {}", uid);
+                    None
+                }
+                Err(other) => return Err(other),
+            },
+            None => None,
         };
 
         debug!("User for fent: {user:?}");
