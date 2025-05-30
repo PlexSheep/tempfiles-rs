@@ -41,7 +41,7 @@ impl BasicContext {
             pkgname: env!("CARGO_PKG_NAME").to_string(),
             homepage: env!("CARGO_PKG_HOMEPAGE").to_string(),
             copyright: format!(
-                "Copyright (c) {} {authors}.\nSome Rights Reserved.",
+                "Copyright © {} {authors}.\nSome Rights Reserved.",
                 now.year()
             ),
             authors,
