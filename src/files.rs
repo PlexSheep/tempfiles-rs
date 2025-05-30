@@ -20,7 +20,7 @@ use crate::user::User;
 
 #[derive(Debug, MultipartForm)]
 pub struct FileUpload {
-    #[multipart(limit = "1GB")]
+    #[multipart(limit = "10GB")]
     pub file: TempFile,
 }
 

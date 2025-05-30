@@ -3,13 +3,13 @@ use std::str::FromStr;
 
 use actix_multipart::form::MultipartForm;
 use actix_web::web::Redirect;
-use actix_web::{HttpResponse, Responder, delete, get, post, web};
+use actix_web::{HttpRequest, HttpResponse, Responder, delete, get, post, web};
 use log::{debug, info, warn};
 use sea_orm::ModelTrait;
 use serde::{Serialize, Serializer};
 use serde_json::json;
 
-use crate::auth::AuthUser;
+use crate::auth::{AuthUser, MaybeAuthUser};
 use crate::errors::Error;
 use crate::files::{FileID, FileUpload};
 use crate::state::AppState;
@@ -23,14 +23,39 @@ pub struct ErrorResponse {
 
 #[post("/file")]
 pub async fn api_view_post_file(
+    req: HttpRequest,
     state: web::Data<AppState>,
     MultipartForm(file_upload): MultipartForm<FileUpload>,
     identity: MaybeAuthUser,
 ) -> Result<impl Responder, Error> {
     let user = identity.user();
+    let max_size = state.max_upload_size(user.as_ref())?;
 
     info!("Uploading File");
     debug!("file upload data: {file_upload:?}");
+
+    if let Some(cl) = req.headers().get("content-length") {
+        let content_length = match cl.to_str().unwrap_or("kacke").parse::<u64>() {
+            Ok(size) => size,
+            Err(e) => {
+                warn!("Could not read content length header: {e}");
+                return Err(Error::BadHeader("content-length".to_string()));
+            }
+        };
+        if content_length > max_size {
+            return Ok(HttpResponse::PayloadTooLarge().json(
+                json!({"error": format!("Content Length larger than max size of {max_size}")}),
+            ));
+        }
+    } else {
+        return Err(Error::MissingHeader("content-length".to_string()));
+    }
+
+    if file_upload.file.size as u64 > max_size {
+        warn!("content-length sizecheck succeeded but actual file size is too large");
+        return Ok(HttpResponse::PayloadTooLarge()
+            .json(json!({"error": format!("Uploaded file is too large: {max_size}")})));
+    }
 
     let fid = state.new_fid().await;
     let name = file_upload

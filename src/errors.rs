@@ -68,6 +68,10 @@ pub enum Error {
     NoSaltStoredForToken(String),
     #[error("A token with this name already exists: {0}")]
     TokenWithThatNameExists(String),
+    #[error("Request is missing a header: {0}")]
+    MissingHeader(String),
+    #[error("Malformed header: {0}")]
+    BadHeader(String),
 }
 
 impl actix_web::error::ResponseError for Error {
