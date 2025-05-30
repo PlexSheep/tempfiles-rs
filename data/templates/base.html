@@ -52,6 +52,10 @@
 					</li>
 				</ul>
 
+				<form id="navFidForm" class="col-12 col-lg-auto mb-3 mb-lg-0 me-lg-3" role="search">
+					<input required id="navFidInput" type="search" class="form-control"
+						placeholder="Search for a file with a file ID" aria-label="Search for File ID">
+				</form>
 				<div class="px-3">
 					<a href="#" onclick="toggleDarkMode()"
 						class="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700">
@@ -103,6 +107,17 @@
 			const selectedNavPage = "navlink-{% block selectedNavPage %}home{% endblock %}";
 			const npselector = document.getElementById(selectedNavPage);
 			npselector.classList.add("active");
+		})
+		// file id search
+		document.addEventListener('DOMContentLoaded', function () {
+			const searchForm = document.getElementById("navFidForm");
+			const searchField = document.getElementById("navFidInput");
+			searchForm.addEventListener("submit", function (e) {
+				e.preventDefault();
+				var new_uri = '/file/' + searchField.value;
+				console.log(`Redirecting to preview for ${searchField.value}`);
+				window.location.href = new_uri;
+			})
 		})
 		function toggleDarkMode() {
 			if (localStorage.theme === "light") {
