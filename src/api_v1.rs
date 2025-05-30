@@ -3,7 +3,7 @@ use std::str::FromStr;
 
 use actix_multipart::form::MultipartForm;
 use actix_web::web::Redirect;
-use actix_web::{HttpRequest, HttpResponse, Responder, delete, get, post, web};
+use actix_web::{HttpResponse, Responder, delete, get, post, web};
 use log::{debug, info, warn};
 use sea_orm::ModelTrait;
 use serde::{Serialize, Serializer};
