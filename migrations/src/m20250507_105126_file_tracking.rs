@@ -12,7 +12,7 @@ impl MigrationTrait for Migration {
                     .table(File::Table)
                     .if_not_exists()
                     .col(schema::pk_auto(File::Id).not_null().unique_key())
-                    .col(schema::integer(File::UserId))
+                    .col(schema::integer(File::UserId).null())
                     .col(schema::date_time(File::ExpirationTime).not_null())
                     .to_owned(),
             )
