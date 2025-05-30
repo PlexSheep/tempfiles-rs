@@ -81,6 +81,10 @@ impl actix_web::error::ResponseError for Error {
             Self::Unauthorized | Self::WrongPassword => actix_web::http::StatusCode::UNAUTHORIZED,
             Self::TokenWithThatNameExists(_) => actix_web::http::StatusCode::CONFLICT,
             Self::BadFileID(_) => actix_web::http::StatusCode::BAD_REQUEST,
+            Self::IO(e) => match e.kind() {
+                std::io::ErrorKind::NotFound => actix_web::http::StatusCode::NOT_FOUND,
+                _ => actix_web::http::StatusCode::INTERNAL_SERVER_ERROR,
+            },
             _ => actix_web::http::StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
@@ -95,6 +99,8 @@ impl actix_web::error::ResponseError for Error {
             HeaderValue::from_str(mime::TEXT_PLAIN_UTF_8.as_ref()).unwrap(),
         );
 
-        res.set_body(actix_web::body::BoxBody::new(format!("{self}")))
+        res.set_body(actix_web::body::BoxBody::new(format!(
+            "An Error occurred: {self}"
+        )))
     }
 }
