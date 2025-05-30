@@ -14,6 +14,7 @@
 	<script>
 		// Handle dark mode
 		if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+			localStorage.theme = "dark";
 			document.documentElement.setAttribute("data-bs-theme", "dark")
 		}
 	</script>
@@ -121,13 +122,13 @@
 		})
 		function toggleDarkMode() {
 			if (localStorage.theme === "light") {
-				console.log("setting light theme");
-				localStorage.theme = "dark";
-				document.documentElement.setAttribute("data-bs-theme", "")
-			} else if (localStorage.theme === "dark") {
 				console.log("setting dark theme");
-				localStorage.theme = "light";
+				localStorage.theme = "dark";
 				document.documentElement.setAttribute("data-bs-theme", "dark")
+			} else if (localStorage.theme === "dark") {
+				console.log("setting light theme");
+				localStorage.theme = "light";
+				document.documentElement.setAttribute("data-bs-theme", "")
 			} else {
 				localStorage.theme = "light";
 				toggleDarkMode();
