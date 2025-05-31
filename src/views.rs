@@ -106,7 +106,7 @@ async fn frontend_view_inner_index(
     let content: String = state
         .templating()?
         .get_template("index.html")?
-        .render(context!(bctx => BasicContext::build(&state, user).await?))?;
+        .render(context!(bctx => BasicContext::build(state, user).await?))?;
     Ok(HttpResponse::Ok().body(content))
 }
 
