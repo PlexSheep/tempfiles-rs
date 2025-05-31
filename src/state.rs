@@ -312,6 +312,7 @@ impl AppState {
     }
 
     pub async fn delete_fid(&self, user: &User, fid: FileID) -> Result<(), Error> {
+        info!("Deleting file: {fid}");
         let db = self.db();
         let file_entry = match self.get_file_db_entry(fid, db).await? {
             Some(f) => f,
@@ -327,8 +328,12 @@ impl AppState {
         if file_uploader == *user {
             let file_name = self.get_filename_for_fid(fid)?;
             let file_path = self.upload_datafile_for_fid(fid, &file_name, false)?;
+            let file_dir = file_path
+                .parent()
+                .expect("file path parent dir did not exist");
+            debug!("Path of file to be deleted: {}", file_dir.display());
 
-            std::fs::remove_dir_all(file_path)?;
+            std::fs::remove_dir_all(file_dir)?;
             file_entry.delete(db).await?;
 
             Ok(())

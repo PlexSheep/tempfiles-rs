@@ -132,6 +132,7 @@ pub async fn frontend_view_get_file_fid_name(
     if file_content_preview.len() < finfo.size as usize {
         text_content.push_str("\n===============\n(abbreviated)");
     }
+    let owns_this_file = user.is_some() && finfo.uploader.is_some() && user == finfo.uploader;
 
     let content: String = state
         .templating()?
@@ -141,7 +142,8 @@ pub async fn frontend_view_get_file_fid_name(
             finfo => finfo,
             content_type_general => ct.type_().to_string(),
             content_type_full => ct.to_string(),
-            file_content => text_content
+            file_content => text_content,
+            owns_this_file => owns_this_file,
         ))?;
     Ok(HttpResponse::Ok().body(content))
 }
