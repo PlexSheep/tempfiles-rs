@@ -130,15 +130,9 @@ fileInput.addEventListener("change", function(something) {
 	}
 });
 
-// Text input change handler for preview
-textInput.addEventListener("input", function() {
-	makeTextPreview();
-});
-
-// File type change handler
-fileTypeSelect.addEventListener("change", function() {
-	makeTextPreview();
-});
+textInput.addEventListener("input", makeTextPreview);
+fileTypeSelect.addEventListener("change", makeTextPreview);
+customFileName.addEventListener("input", makeTextPreview);
 
 function isValidImage(file) {
 	const allowedTypes = ["image/jpeg", "image/png", "image/gif"];
