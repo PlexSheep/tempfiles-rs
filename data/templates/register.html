@@ -1,7 +1,7 @@
 {% extends "base.html" %} {% block main %}
+{% if bctx.config.accounts.allow_registration %}
 <form method="POST" action="/register">
 	<h1 class="h3 mb-3 fw-normal">Registration</h1>
-
 	<div class="form-floating">
 		<input type="username" name="username" class="form-control" id="floatingInput" placeholder="Username19" />
 		<label for="floatingInput">Username</label>
@@ -20,6 +20,16 @@
 		<label class="form-check-label" for="checkDefault"> Remember me </label>
 	</div>
 	<button class="btn btn-primary w-100 py-2" type="submit">Sign in</button>
-	<div></div>
+	<div>
+	</div>
 </form>
+{% else %}
+<div class="px-4 py-5 my-5 text-center">
+	<i class="bi bi-person-fill-slash text-light" style="font-size: 10rem;"></i>
+	<h2 class="display-5 fw-bold text-body-emphasis">Registrations are closed</h2>
+	<div class="col-lg-6 mx-auto">
+		<p class="lead mb-4">The administrator has disabled registration.</p>
+	</div>
+</div>
+{% endif %}
 {% endblock %}

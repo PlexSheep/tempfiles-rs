@@ -10,6 +10,7 @@ use minijinja::context;
 use serde::Serialize;
 
 use crate::auth::{AuthUser, MaybeAuthUser};
+use crate::config::Config;
 use crate::db::schema::user_token::Model as UserTokenM;
 use crate::errors::Error;
 use crate::files::FileID;
@@ -25,6 +26,7 @@ pub struct BasicContext {
     authors: String,
     homepage: String,
     copyright: String,
+    config: Config,
 }
 
 impl BasicContext {
@@ -45,6 +47,7 @@ impl BasicContext {
                 now.year()
             ),
             authors,
+            config: state.config().clone(),
         })
     }
 }
@@ -203,7 +206,12 @@ pub async fn frontend_view_post_register(
     state: web::Data<AppState>,
     web::Form(register_data): web::Form<UserRegisterData>,
 ) -> Result<impl Responder, Error> {
-    // HACK: This should use the csprng of the AppState, but that seems incompatible somehow?
+    if !state.config().accounts.allow_registration {
+        return Err(Error::RegistrationClosed);
+    }
+
+    // HACK: This should use the csprng of the AppState, but there are two different versions of
+    // the crate defining this trait in the dependencies
     let salt: SaltString = SaltString::generate(&mut argon2::password_hash::rand_core::OsRng);
     let user = User::register_and_insert(
         register_data,

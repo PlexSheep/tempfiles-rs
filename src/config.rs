@@ -3,18 +3,18 @@ use std::path::Path;
 
 use actix_web::web;
 use log::trace;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::errors::ConfigError;
 
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct Config {
     pub files: FilesConfig,
     pub accounts: AccountsConfig,
     pub service: ServiceConfig,
 }
 
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct FilesConfig {
     pub max_size_kb_anon: u64,
     pub max_size_kb_users: u64,
@@ -25,15 +25,16 @@ pub struct FilesConfig {
     pub delete_old_files: bool,
 }
 
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct AccountsConfig {
     /// Allow Anonymous Uploads
     pub allow_anon: bool,
     pub allow_registration: bool,
 }
 
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct ServiceConfig {
+    #[serde(skip_serializing)]
     pub secret: String,
     pub rate_limit_window_ms: u64,
     pub rate_limit_max_uploads: u64,

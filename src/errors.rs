@@ -72,13 +72,17 @@ pub enum Error {
     MissingHeader(String),
     #[error("Malformed header: {0}")]
     BadHeader(String),
+    #[error("Registrations are closed")]
+    RegistrationClosed,
 }
 
 impl actix_web::error::ResponseError for Error {
     fn status_code(&self) -> actix_web::http::StatusCode {
         match self {
             Self::FileNotFound => actix_web::http::StatusCode::NOT_FOUND,
-            Self::Unauthorized | Self::WrongPassword => actix_web::http::StatusCode::UNAUTHORIZED,
+            Self::Unauthorized | Self::WrongPassword | Self::RegistrationClosed => {
+                actix_web::http::StatusCode::UNAUTHORIZED
+            }
             Self::TokenWithThatNameExists(_) => actix_web::http::StatusCode::CONFLICT,
             Self::BadFileID(_) => actix_web::http::StatusCode::BAD_REQUEST,
             Self::IO(e) => match e.kind() {
