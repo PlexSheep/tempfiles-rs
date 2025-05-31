@@ -12,7 +12,6 @@ use actix_web::middleware::Logger;
 use actix_web::web::{FormConfig, PayloadConfig};
 use actix_web::{App, HttpServer, web};
 use actix_web_static_files::ResourceFiles;
-use garbage_collector::garbage_collector;
 use log::trace;
 
 mod api_v1;
@@ -30,6 +29,7 @@ mod views;
 use self::api_v1::*;
 use self::config::actix_config_global;
 use self::errors::Error;
+use self::garbage_collector::garbage_collector;
 use self::state::AppState;
 use self::state::load_config;
 use self::views::*;
@@ -87,6 +87,7 @@ async fn main() -> Result<(), Error> {
                     .service(api_view_get_file_fid_name)
                     .service(api_view_get_file_fid_name_info)
                     .service(api_view_get_file_fid)
+                    .service(api_view_delete_file_fid)
                     .service(api_view_post_file)
                     .service(api_view_post_auth_token)
                     .service(api_view_get_auth_token)

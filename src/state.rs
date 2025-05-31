@@ -5,7 +5,7 @@ use std::str::FromStr;
 use log::{debug, error, info, trace, warn};
 use migrations::{MigratorTrait, SchemaManager};
 use rand::{Rng, SeedableRng};
-use sea_orm::{Database, DatabaseConnection, EntityTrait as _};
+use sea_orm::{Database, DatabaseConnection, EntityTrait as _, ModelTrait};
 use tokio::sync::Mutex;
 
 use crate::config::Config;
@@ -309,6 +309,32 @@ impl AppState {
         let u = users.is_empty();
         trace!("next user will be admin: {u}");
         Ok(u)
+    }
+
+    pub async fn delete_fid(&self, user: &User, fid: FileID) -> Result<(), Error> {
+        let db = self.db();
+        let file_entry = match self.get_file_db_entry(fid, db).await? {
+            Some(f) => f,
+            None => return Err(Error::FileNotFound),
+        };
+
+        let user_id = match file_entry.user_id {
+            Some(uid) => uid,
+            None => return Err(Error::Unauthorized),
+        };
+        let file_uploader = User::get_by_id(user_id, db).await?;
+
+        if file_uploader == *user {
+            let file_name = self.get_filename_for_fid(fid)?;
+            let file_path = self.upload_datafile_for_fid(fid, &file_name, false)?;
+
+            std::fs::remove_dir_all(file_path)?;
+            file_entry.delete(db).await?;
+
+            Ok(())
+        } else {
+            Err(Error::Unauthorized)
+        }
     }
 }
 

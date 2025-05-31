@@ -36,7 +36,7 @@ pub const APIV1_TOKEN_SECRET_LEN: usize = 36;
 
 pub type UserID = RawUserID;
 
-#[derive(Debug, Serialize, Clone)]
+#[derive(Debug, Serialize, Clone, PartialEq, Eq)]
 pub struct User {
     pub(crate) inner: UserModel,
 }

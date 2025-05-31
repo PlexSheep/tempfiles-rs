@@ -84,6 +84,19 @@ pub async fn api_view_get_file_fid(
     ))
 }
 
+#[delete("/file/{fid}")]
+pub async fn api_view_delete_file_fid(
+    state: web::Data<AppState>,
+    path: web::Path<String>,
+    user: AuthUser,
+) -> Result<impl Responder, Error> {
+    let user = user.user();
+    let fid: crate::files::FileID = FileID::from_str(&path.into_inner())?;
+
+    state.delete_fid(&user, fid).await?;
+    Ok(HttpResponse::Ok().json(json!({"deleted": true})))
+}
+
 #[get("/file/{fid}/{filename}")]
 pub async fn api_view_get_file_fid_name(
     req: actix_web::HttpRequest,
