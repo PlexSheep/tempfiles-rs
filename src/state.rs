@@ -11,7 +11,7 @@ use tokio::sync::Mutex;
 use crate::config::Config;
 use crate::db::schema;
 use crate::db::schema::file::{Entity as FileE, Model as FileM};
-use crate::db::schema::user::{Entity as UserE, Model as UserM};
+use crate::db::schema::user::Entity as UserE;
 use crate::errors::Error;
 use crate::files::{FileID, FileInfos};
 use crate::user::User;
