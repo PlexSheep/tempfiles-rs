@@ -2,7 +2,7 @@ use std::io::Write;
 use std::path::PathBuf;
 use std::str::FromStr;
 
-use log::{debug, error, info, trace, warn};
+use log::{debug, error, info, warn};
 use migrations::{MigratorTrait, SchemaManager};
 use rand::{Rng, SeedableRng};
 use sea_orm::{Database, DatabaseConnection, EntityTrait as _, ModelTrait};
