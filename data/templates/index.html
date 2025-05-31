@@ -1,57 +1,107 @@
-{% extends "base.html" %} 
+{% extends "base.html" %}
 {% block selectedNavPage %}home{% endblock %}
 {% block main %}
-  <div class="row flex-lg-row-reverse align-items-center g-5 py-5">
-    <div class="col-10 col-sm-8 col-lg-6 mx-auto">
-      <img
-        src="/static/img/logo.svg"
-        class="d-block mx-lg-auto img-fluid"
-        alt="Bootstrap Themes"
-        width="700"
-        height="500"
-        loading="lazy"
-      />
-    </div>
-    <div class="col-lg-6 text-center">
-      <h1 class="display-3 fw-bold text-body-emphasis lh-1 mb-3">
-				tempfiles-rs <small class="text-body-secondary fs-6">{{ bctx.version}}</small>
-      </h1>
-      <p class="lead">Upload any file and get a public link for sharing it!</p>
-      <div class="d-grid gap-2 d-md-flex justify-content-md-start">
-        <form enctype="multipart/form-data" id="upload-form" class="mx-auto 
-					w-100 px-2">
-          <div
-            class="my-3 b-2 bg-secondary-subtle border text-center container"
-            id="dropContainer"
-          >
-            <div class="row">
-              <div
-                class="d-flex flex-column justify-content-center align-items-center"
-                id="fileUploadInputBox"
-                style="min-width: 30vw; min-height: 20vh"
-              >
-                <label for="fileInput" class="form-label">Upload File</label>
-                <input
-                  id="fileInput"
-                  type="file"
-                  class="form-control w-75"
-                  name="file"
-                />
-                <div id="preview-container"></div>
-              </div>
-            </div>
-          </div>
-          <div class="my-3">
-            <input type="submit" class="btn btn-primary" />
-          </div>
-          <div id="formout" class="my-3"></div>
-          <div id="formstatus" class="my-3"></div>
-        </form>
-      </div>
-    </div>
-  </div>
+<div class="row flex-lg-row-reverse align-items-center g-5 py-5">
+	<div class="col-10 col-sm-8 col-lg-6 mx-auto">
+		<img src="/static/img/logo.svg" class="d-block mx-lg-auto img-fluid" alt="Bootstrap Themes" width="700"
+			height="500" loading="lazy" />
+	</div>
+	<div class="col-lg-6 text-center">
+		<h1 class="display-3 fw-bold text-body-emphasis lh-1 mb-3">
+			tempfiles-rs <small class="text-body-secondary fs-6">{{ bctx.version}}</small>
+		</h1>
+		<p class="lead">Upload any file or paste text and get a public link for sharing!</p>
+		<div class="d-grid gap-2 d-md-flex justify-content-md-start">
+			<form enctype="multipart/form-data" id="upload-form" class="mx-auto w-100 px-2">
+
+				<!-- Upload Mode Tabs -->
+				<ul class="nav nav-tabs mb-3" id="uploadTabs" role="tablist">
+					<li class="nav-item" role="presentation">
+						<button class="nav-link active" id="file-tab" data-bs-toggle="tab" data-bs-target="#file-pane"
+							type="button" role="tab">
+							<i class="bi bi-file-earmark-arrow-up"></i> File Upload
+						</button>
+					</li>
+					<li class="nav-item" role="presentation">
+						<button class="nav-link" id="text-tab" data-bs-toggle="tab" data-bs-target="#text-pane"
+							type="button" role="tab">
+							<i class="bi bi-file-earmark-text"></i> Text Paste
+						</button>
+					</li>
+				</ul>
+
+				<!-- Tab Content -->
+				<div class="tab-content" id="uploadTabsContent">
+
+					<!-- File Upload Tab -->
+					<div class="tab-pane fade show active" id="file-pane" role="tabpanel">
+						<div class="my-3 b-2 bg-secondary-subtle border text-center container" id="dropContainer">
+							<div class="row">
+								<div class="d-flex flex-column justify-content-center align-items-center"
+									id="fileUploadInputBox" style="min-width: 30vw; min-height: 20vh">
+									<label for="fileInput" class="form-label">Upload File</label>
+									<input id="fileInput" type="file" class="form-control w-75" name="file" />
+									<div id="preview-container"></div>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<!-- Text Paste Tab -->
+					<div class="tab-pane fade" id="text-pane" role="tabpanel">
+						<div class="my-3">
+							<label for="textInput" class="form-label">Paste your text below:</label>
+							<code class="font-monospace">
+								<textarea id="textInput" class="form-control font-monospace" rows="12"
+									placeholder="Paste your text here..."></textarea>
+							</code>
+						</div>
+
+						<!-- File Type Selection -->
+						<div class="row my-3">
+							<div class="col-md-6">
+								<label for="fileTypeSelect" class="form-label">File Type:</label>
+								<select id="fileTypeSelect" class="form-select">
+									<option value="txt">Plain Text (.txt)</option>
+									<option value="md">Markdown (.md)</option>
+									<option value="rs">Rust (.rs)</option>
+									<option value="py">Python (.py)</option>
+									<option value="js">JavaScript (.js)</option>
+									<option value="css">CSS (.css)</option>
+									<option value="html">HTML (.html)</option>
+									<option value="json">JSON (.json)</option>
+									<option value="xml">XML (.xml)</option>
+									<option value="yaml">YAML (.yaml)</option>
+									<option value="toml">TOML (.toml)</option>
+									<option value="sh">Shell Script (.sh)</option>
+									<option value="sql">SQL (.sql)</option>
+									<option value="log">Log File (.log)</option>
+								</select>
+							</div>
+							<div class="col-md-6">
+								<label for="customFileName" class="form-label">Custom Name (optional):</label>
+								<input type="text" id="customFileName" class="form-control" placeholder="my-file" />
+								<small class="form-text text-muted">Leave empty for 'paste.extension'</small>
+							</div>
+						</div>
+
+						<code class="font-monospace text-start">
+							<div id="text-preview-container"></div>
+						</code>
+					</div>
+				</div>
+
+				<div class="my-3">
+					<input type="submit" class="btn btn-primary" />
+				</div>
+				<div id="formout" class="my-3"></div>
+				<div id="formstatus" class="my-3"></div>
+			</form>
+		</div>
+	</div>
+</div>
 
 <script>
-  {% include "js/upload_file.js" %}
+	{% include "js/upload_file.js" %}
 </script>
 {% endblock %}
