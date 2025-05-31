@@ -230,8 +230,21 @@ pub async fn frontend_view_get_file_fid_name(
     })
 }
 
-pub async fn view_default() -> HttpResponse {
-    HttpResponse::NotFound().body("No site for this URI")
+pub async fn view_default(
+    state: web::Data<AppState>,
+    identity: MaybeAuthUser,
+) -> actix_web::HttpResponse {
+    let f = async move || {
+        let user = identity.user();
+        let e = Error::SiteDoesNotExist;
+        let status_code = e.status_code();
+        let error_details = ErrorPageDetails::from(e);
+        let content: String = state.templating()?.get_template("error.html")?.render(
+            context!(bctx => BasicContext::build(&state, user).await?, error => error_details),
+        )?;
+        ok!(HttpResponse::Ok().status(status_code).body(content))
+    };
+    f().await.expect("could not make default page")
 }
 
 #[get("/login")]

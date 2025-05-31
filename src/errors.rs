@@ -86,6 +86,8 @@ pub enum Error {
     BadHeader(String),
     #[error("Registrations are closed")]
     RegistrationClosed,
+    #[error("The requested site does not exist")]
+    SiteDoesNotExist,
 }
 
 impl From<Error> for ErrorPageDetails {
@@ -93,12 +95,11 @@ impl From<Error> for ErrorPageDetails {
         let mut builder = ErrorPageDetailsBuilder::default();
         let code = e.status_code();
         builder.code(code.into());
+        builder.heading(code.to_string());
+        builder.message(e.to_string());
 
         if code.is_server_error() {
             builder.icon("bug".to_string());
-            builder.heading("Internal Server Error".to_string());
-            #[cfg(debug_assertions)]
-            builder.message(e.to_string());
             #[cfg(not(debug_assertions))]
             builder.message(concat!(
                 "The server ran into a problem it did not know how to handle.",
@@ -106,16 +107,10 @@ impl From<Error> for ErrorPageDetails {
             ));
         } else if code == StatusCode::NOT_FOUND {
             builder.icon("question-circle-fill".to_string());
-            builder.heading("Not Found".to_string());
-            builder.message(e.to_string());
         } else if code == StatusCode::UNAUTHORIZED {
             builder.icon("slash-circle-fill".to_string());
-            builder.heading("You are not allowed to access this ressource".to_string());
-            builder.message(e.to_string());
         } else if code.is_client_error() {
-            builder.icon("slash-circle-fill".to_string());
-            builder.heading("Client Side Error".to_string());
-            builder.message(e.to_string());
+            builder.icon("x".to_string());
         } else {
             unreachable!()
         }
@@ -129,7 +124,7 @@ impl From<Error> for ErrorPageDetails {
 impl actix_web::error::ResponseError for Error {
     fn status_code(&self) -> actix_web::http::StatusCode {
         match self {
-            Self::FileNotFound => actix_web::http::StatusCode::NOT_FOUND,
+            Self::FileNotFound | Error::SiteDoesNotExist => actix_web::http::StatusCode::NOT_FOUND,
             Self::Unauthorized | Self::WrongPassword | Self::RegistrationClosed => {
                 actix_web::http::StatusCode::UNAUTHORIZED
             }
