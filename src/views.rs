@@ -27,6 +27,7 @@ pub struct BasicContext {
     homepage: String,
     copyright: String,
     config: Config,
+    next_created_user_will_be_admin: bool,
 }
 
 impl BasicContext {
@@ -48,6 +49,7 @@ impl BasicContext {
             ),
             authors,
             config: state.config().clone(),
+            next_created_user_will_be_admin: state.next_created_user_will_be_admin().await?,
         })
     }
 }
@@ -206,7 +208,8 @@ pub async fn frontend_view_post_register(
     state: web::Data<AppState>,
     web::Form(register_data): web::Form<UserRegisterData>,
 ) -> Result<impl Responder, Error> {
-    if !state.config().accounts.allow_registration {
+    let will_be_admin = state.next_created_user_will_be_admin().await?;
+    if !state.config().accounts.allow_registration && !will_be_admin {
         return Err(Error::RegistrationClosed);
     }
 
@@ -215,7 +218,11 @@ pub async fn frontend_view_post_register(
     let salt: SaltString = SaltString::generate(&mut argon2::password_hash::rand_core::OsRng);
     let user = User::register_and_insert(
         register_data,
-        user::UserKind::Standard,
+        if will_be_admin {
+            user::UserKind::Admin
+        } else {
+            user::UserKind::Standard
+        },
         state.db(),
         salt.as_salt(),
     )

@@ -2,7 +2,7 @@ use std::io::Write;
 use std::path::PathBuf;
 use std::str::FromStr;
 
-use log::{debug, error, info, warn};
+use log::{debug, error, info, trace, warn};
 use migrations::{MigratorTrait, SchemaManager};
 use rand::{Rng, SeedableRng};
 use sea_orm::{Database, DatabaseConnection, EntityTrait as _};
@@ -11,6 +11,7 @@ use tokio::sync::Mutex;
 use crate::config::Config;
 use crate::db::schema;
 use crate::db::schema::file::{Entity as FileE, Model as FileM};
+use crate::db::schema::user::{Entity as UserE, Model as UserM};
 use crate::errors::Error;
 use crate::files::{FileID, FileInfos};
 use crate::user::User;
@@ -301,6 +302,13 @@ impl AppState {
             None => self.config().files.max_size_kb_anon * 1024,
             Some(_) => self.config().files.max_size_kb_users * 1024,
         })
+    }
+
+    pub async fn next_created_user_will_be_admin(&self) -> Result<bool, Error> {
+        let users = UserE::find().all(self.db()).await?;
+        let u = users.is_empty();
+        trace!("next user will be admin: {u}");
+        Ok(u)
     }
 }
 

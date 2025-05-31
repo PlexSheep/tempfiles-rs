@@ -82,7 +82,8 @@
 					</a>
 					<ul class="dropdown-menu text-small" style="">
 						<li>
-							<h6 class="dropdown-header">{{ bctx.user.inner.user_name }} ({{ bctx.user.inner.kind }})</h6>
+							<h6 class="dropdown-header">{{ bctx.user.inner.user_name }} ({{ bctx.user.inner.kind }})
+							</h6>
 						</li>
 						<li>
 							<hr class="dropdown-divider" />
@@ -99,8 +100,18 @@
 		</div>
 	</header>
 
-	<div class="container-xl my-5">{% block main %}{% endblock %}</div>
+	{% if bctx.next_created_user_will_be_admin %}
+	<div class="container-xl my-5 text-center bg-warning p-2 border border-5 rounded text-dark">
+		<h2 class="display-6">
+			<i class="bi bi-cone-striped"></i>
+			The first account you register will be the
+			administrator account!
+			<i class="bi bi-cone-striped"></i>
+		</h2>
+	</div>
+	{% endif %}
 
+	<div class="container-xl my-5">{% block main %}{% endblock %}</div>
 
 	<script>
 		// set active link in navbar
