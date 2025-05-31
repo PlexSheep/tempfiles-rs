@@ -58,5 +58,6 @@ static-files = "0.2.4"
 members = ["./migrations/", "."]
 
 [features]
-default = []
-devel-quickcycle = ["dep:minijinja-autoreload"]
+default = ["autoreload"]
+autoreload = ["dep:minijinja-autoreload"]
+devel-quickcycle = ["autoreload"]

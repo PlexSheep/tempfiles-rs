@@ -13,7 +13,7 @@ use actix_web::web::{FormConfig, PayloadConfig};
 use actix_web::{App, HttpServer, web};
 use actix_web_static_files::ResourceFiles;
 use garbage_collector::garbage_collector;
-use log::trace;
+use log::{info, trace};
 
 mod api_v1;
 mod auth;
