@@ -307,7 +307,6 @@ impl AppState {
     pub async fn next_created_user_will_be_admin(&self) -> Result<bool, Error> {
         let users = UserE::find().all(self.db()).await?;
         let u = users.is_empty();
-        trace!("next user will be admin: {u}");
         Ok(u)
     }
 

@@ -1,8 +1,20 @@
+use actix_web::ResponseError;
+use actix_web::http::StatusCode;
 use actix_web::http::header::HeaderValue;
+use derive_builder::Builder;
 use log::{error, warn};
+use serde::Serialize;
 use std::num::ParseIntError;
 use std::string::FromUtf8Error;
 use thiserror::Error;
+
+#[derive(Debug, Serialize, Builder, Default)]
+pub struct ErrorPageDetails {
+    icon: String,
+    code: u16,
+    heading: String,
+    message: String,
+}
 
 #[derive(Error, Debug)]
 pub enum ConfigError {
@@ -74,6 +86,44 @@ pub enum Error {
     BadHeader(String),
     #[error("Registrations are closed")]
     RegistrationClosed,
+}
+
+impl From<Error> for ErrorPageDetails {
+    fn from(e: Error) -> Self {
+        let mut builder = ErrorPageDetailsBuilder::default();
+        let code = e.status_code();
+        builder.code(code.into());
+
+        if code.is_server_error() {
+            builder.icon("bug".to_string());
+            builder.heading("Internal Server Error".to_string());
+            #[cfg(debug_assertions)]
+            builder.message(e.to_string());
+            #[cfg(not(debug_assertions))]
+            builder.message(concat!(
+                "The server ran into a problem it did not know how to handle.",
+                "Please contact the administrator.",
+            ));
+        } else if code == StatusCode::NOT_FOUND {
+            builder.icon("question-circle-fill".to_string());
+            builder.heading("Not Found".to_string());
+            builder.message(e.to_string());
+        } else if code == StatusCode::UNAUTHORIZED {
+            builder.icon("slash-circle-fill".to_string());
+            builder.heading("You are not allowed to access this ressource".to_string());
+            builder.message(e.to_string());
+        } else if code.is_client_error() {
+            builder.icon("slash-circle-fill".to_string());
+            builder.heading("Client Side Error".to_string());
+            builder.message(e.to_string());
+        } else {
+            unreachable!()
+        }
+
+        builder
+            .build()
+            .expect("could not make error detail information")
+    }
 }
 
 impl actix_web::error::ResponseError for Error {

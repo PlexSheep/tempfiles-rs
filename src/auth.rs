@@ -13,6 +13,10 @@ impl AuthUser {
         self.0
     }
 
+    pub fn user_ref(&self) -> &User {
+        &self.0
+    }
+
     pub fn identity(self) -> Option<Identity> {
         self.1
     }
@@ -89,8 +93,17 @@ impl MaybeAuthUser {
     pub fn inner(self) -> Option<AuthUser> {
         self.0
     }
+
+    pub fn inner_ref(&self) -> Option<&AuthUser> {
+        self.0.as_ref()
+    }
+
     pub fn user(self) -> Option<User> {
-        self.0.map(|u| u.user())
+        self.inner().map(|u| u.user())
+    }
+
+    pub fn user_ref(&self) -> Option<&User> {
+        self.inner_ref().map(|u| u.user_ref())
     }
 }
 
