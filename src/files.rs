@@ -101,7 +101,7 @@ impl FileInfosBuilder {
             Some(uid) => match User::get_by_id(uid, db).await {
                 Ok(user) => Some(user),
                 Err(Error::UserDoesNotExist) => {
-                    warn!("Uploader with unknown user id: {}", uid);
+                    warn!("Uploader with unknown user id: {uid}");
                     None
                 }
                 Err(other) => return Err(other),
