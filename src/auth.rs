@@ -43,26 +43,25 @@ impl FromRequest for AuthUser {
 
         Box::pin(async move {
             // Try API token first
-            if let Some(auth_header) = req.headers().get("Authorization") {
-                if let Ok(auth_str) = auth_header.to_str() {
-                    if let Some(token) = auth_str.strip_prefix("Bearer ") {
-                        // Get database connection from app state
-                        if let Some(state) = req.app_data::<actix_web::web::Data<AppState>>() {
-                            let login_data = UserLoginData::ApiV1(UserLoginDataApiV1 {
-                                token: token.to_string(),
-                            });
+            if let Some(auth_header) = req.headers().get("Authorization")
+                && let Ok(auth_str) = auth_header.to_str()
+                && let Some(token) = auth_str.strip_prefix("Bearer ")
+            {
+                // Get database connection from app state
+                if let Some(state) = req.app_data::<actix_web::web::Data<AppState>>() {
+                    let login_data = UserLoginData::ApiV1(UserLoginDataApiV1 {
+                        token: token.to_string(),
+                    });
 
-                            // Use existing authentication logic
-                            match User::login(login_data, state.db()).await {
-                                Ok(user) => return Ok(AuthUser(user, None)),
-                                Err(e) => match e {
-                                    crate::errors::Error::WrongPassword => {
-                                        return Err(ErrorUnauthorized("Invalid Credentials"));
-                                    }
-                                    _other => (),
-                                },
+                    // Use existing authentication logic
+                    match User::login(login_data, state.db()).await {
+                        Ok(user) => return Ok(AuthUser(user, None)),
+                        Err(e) => match e {
+                            crate::errors::Error::WrongPassword => {
+                                return Err(ErrorUnauthorized("Invalid Credentials"));
                             }
-                        }
+                            _other => (),
+                        },
                     }
                 }
             }
@@ -70,13 +69,12 @@ impl FromRequest for AuthUser {
             // Fall back to session-based authentication
             if let Ok(identity) =
                 Identity::from_request(&req, &mut actix_web::dev::Payload::None).into_inner()
+                && let Some(state) = req.app_data::<actix_web::web::Data<AppState>>()
             {
-                if let Some(state) = req.app_data::<actix_web::web::Data<AppState>>() {
-                    match get_user_from_identity(&identity, state.db()).await {
-                        Ok(user) => return Ok(AuthUser(user, Some(identity))),
-                        Err(_) => {
-                            // Session authentication failed
-                        }
+                match get_user_from_identity(&identity, state.db()).await {
+                    Ok(user) => return Ok(AuthUser(user, Some(identity))),
+                    Err(_) => {
+                        // Session authentication failed
                     }
                 }
             }
