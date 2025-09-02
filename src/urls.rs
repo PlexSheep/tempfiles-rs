@@ -87,7 +87,7 @@ impl AppState {
         parts.path_and_query = Some(
             raw_url
                 .parse()
-                .inspect_err(|e| error!("Made a faulty URI '{}' somehow: {e}", raw_url))
+                .inspect_err(|e| error!("Made a faulty URI '{raw_url}' somehow: {e}"))
                 .expect("could not format url for fid"),
         );
 
