@@ -136,12 +136,11 @@ impl AppState {
         let fid: FileID = fid.into();
         let mut p = self.storage_dir();
         p.push(fid.to_string());
-        if create {
-            if let Err(e) = std::fs::create_dir(&p) {
-                if !matches!(e.kind(), std::io::ErrorKind::AlreadyExists) {
-                    return Err(e.into());
-                }
-            }
+        if create
+            && let Err(e) = std::fs::create_dir(&p)
+            && !matches!(e.kind(), std::io::ErrorKind::AlreadyExists)
+        {
+            return Err(e.into());
         }
         Ok(p)
     }
@@ -155,12 +154,11 @@ impl AppState {
         let mut p = self.storage_dir();
         p.push(fid.to_string());
         p.push("data");
-        if create_dirs {
-            if let Err(e) = std::fs::create_dir_all(&p) {
-                if !matches!(e.kind(), std::io::ErrorKind::AlreadyExists) {
-                    return Err(e.into());
-                }
-            }
+        if create_dirs
+            && let Err(e) = std::fs::create_dir_all(&p)
+            && !matches!(e.kind(), std::io::ErrorKind::AlreadyExists)
+        {
+            return Err(e.into());
         }
         p.push(name);
         Ok(p)
